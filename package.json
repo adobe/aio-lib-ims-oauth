@@ -1,0 +1,47 @@
+{
+  "name": "aio-cli-plugin-ims-oauth",
+  "description": "OAuth2 (SUSI) login plugin for the IMS plugin",
+  "version": "0.0.0",
+  "author": "Felix Meschberger @fmeschbe",
+  "bugs": "https://github.com/fmeschbe/aio-cli-plugin-ims-oauth/issues",
+  "dependencies": {
+    "@oclif/command": "^1.5.13",
+    "@oclif/config": "^1.13.0",
+    "chromium": "^2.1.0"
+  },
+  "devDependencies": {
+    "@oclif/dev-cli": "^1.22.0",
+    "@oclif/plugin-help": "^2.1.6",
+    "eslint": "^5.16.0",
+    "eslint-config-oclif": "^3.1.0",
+    "globby": "^8.0.2"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "files": [
+    "/oclif.manifest.json",
+    "/src"
+  ],
+  "homepage": "https://github.com/fmeschbe/aio-cli-plugin-ims-oauth",
+  "keywords": [
+    "oclif-plugin",
+    "ims-login"
+  ],
+  "license": "Apache-2.0",
+  "main": "./src/ims-oauth.js",
+  "oclif": {
+    "bin": "./bin/run",
+    "devPlugins": [
+      "@oclif/plugin-help"
+    ]
+  },
+  "repository": "fmeschbe/aio-cli-plugin-ims-oauth",
+  "scripts": {
+    "postpack": "rm -f oclif.manifest.json",
+    "posttest": "eslint .",
+    "prepack": "oclif-dev manifest && oclif-dev readme",
+    "test": "echo NO TESTS",
+    "version": "oclif-dev readme && git add README.md"
+  }
+}
