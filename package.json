@@ -7,7 +7,7 @@
   "dependencies": {
     "@oclif/command": "^1.5.13",
     "@oclif/config": "^1.13.0",
-    "chromium": "^2.1.0"
+    "electron": "^5.0.2"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1.22.0",
@@ -21,6 +21,7 @@
   },
   "files": [
     "/oclif.manifest.json",
+    "/lib",
     "/src"
   ],
   "homepage": "https://github.com/fmeschbe/aio-cli-plugin-ims-oauth",

@@ -10,39 +10,39 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const ProxyServer = require('./proxy.js');
-const Browser = require('./browser.js')
+const Electron = require('./electron');
 const url = require('url');
 const querystring = require('querystring');
 const debug = require('debug')('@adobe/aio-cli-plugin-ims-oauth/login');
+
 
 // The ims-login hook for OAuth2 (SUSI) is taking care of calling IMS
 // the function takes the
 
 function canSupportSync(configData) {
-  if (!configData) {
-    return false;
-  }
-
-  const missing_keys = [];
-  const required_keys = ['callback_url', 'client_id', 'client_secret', 'scope'];
-
-  required_keys.forEach(key => {
-    if (!configData[key]) {
-      missing_keys.push(key)
+    if (!configData) {
+        return false;
     }
-  })
 
-  return missing_keys.length == 0;
+    const missing_keys = [];
+    const required_keys = ['callback_url', 'client_id', 'client_secret', 'scope'];
+
+    required_keys.forEach(key => {
+        if (!configData[key]) {
+            missing_keys.push(key)
+        }
+    })
+
+    return missing_keys.length == 0;
 }
 
 async function canSupport(configData) {
-  if (canSupportSync(configData)) {
-    return Promise.resolve(true);
-  } else {
-    // TODO: Indicate that this is not really an error but just a possibility
-    return Promise.reject(`OAuth2 not supported due to some missing properties: ${missing_keys}`);
-  }
+    if (canSupportSync(configData)) {
+        return Promise.resolve(true);
+    } else {
+        // TODO: Indicate that this is not really an error but just a possibility
+        return Promise.reject(`OAuth2 not supported due to some missing properties: ${missing_keys}`);
+    }
 }
 
 // The result of the browser and proxy interaction, which can take values
@@ -55,89 +55,45 @@ async function canSupport(configData) {
 //             the credentials
 let webResult = undefined;
 
-async function getAccessToken(requestUrl) {
-  debug("getAccessToken(%s)", requestUrl);
-  requestUrl = url.parse(requestUrl);
-  query = querystring.parse(requestUrl.query);
-  if (query.code) {
-    debug("  > code: %s", query.code);
-    try {
-      webResult = query.code;
-      debug("  > Received: %o", webResult);
-    } catch (err) {
-      debug("  > Error: %O", err);
-      webResult = err;
-    }
-    cleanUp();
-  } else {
-    debug("  > Received request without code; just ignore and continue.");
-  }
-}
-
 /**
- * Sets an error to the webResult field if the user terminates the browser early.
- * To prevent overwriting any possibly positive result from getting the access token
- * this function will not overwrite any value in the webResult field.
+ * Called when the Electron app driving the SUSI flow terminates.
+ * The result parameter is either the authorization code to get the
+ * access token or an Error object providing a message indicating
+ * the reason for failure.
+ * This result is assigned to the webResult variable.
  */
-function userTerminatedBrowser() {
-  if (!webResult) {
-    webResult = new Error("User terminated the browser without authentication");
+function electronCallback(result) {
+    webResult = result ? result : new Error("No result received from web app");
     debug(webResult);
-  }
-  cleanUp();
-}
-
-let proxy = undefined;
-let browser = undefined;
-
-// terminate the proxy and the browser
-async function cleanUp() {
-  debug("cleanUp()");
-  if (browser) {
-    browser.terminate();
-    browser = null;
-  }
-
-  if (proxy) {
-    proxy.terminate();
-    browser = null;
-  }
 }
 
 async function setupWeb(ims, config) {
-  debug("setupWeb(%o)", config);
-  proxy = new ProxyServer(config.callback_url, getAccessToken);
-  const appUrl = ims.getSusiUrl(config.client_id, config.scope, config.callback_url, config.state);
-  proxy.listen().
-    then(proxyUrl => {
-      debug("  > proxy : %s", proxyUrl);
-      debug("  > appUrl: %s", appUrl);
-      browser = new Browser(appUrl, proxyUrl).launch(false, userTerminatedBrowser);
-    });
+    debug("setupWeb(%o)", config);
+    const appUrl = ims.getSusiUrl(config.client_id, config.scope, config.callback_url, config.state);
+    electron = new Electron(appUrl, config.callback_url).launch(electronCallback);
 }
 
-
 async function checkWebResult() {
-  if (!webResult) {
-    debug("checkWebResult: No result yet, continue polling");
-    return new Promise(resolve => setTimeout(resolve.bind(null), 100) ).then(checkWebResult);
-  } else if (webResult instanceof Error) {
-    debug("checkWebResult: Rejecting on error: %o", webResult);
-    return Promise.reject(webResult);
-  } else {
-    debug("checkWebResult: Resolving with code: %s", webResult);
-    return Promise.resolve(webResult);
-  }
+    if (!webResult) {
+        debug("checkWebResult: No result yet, continue polling");
+        return new Promise(resolve => setTimeout(resolve.bind(null), 100)).then(checkWebResult);
+    } else if (webResult instanceof Error) {
+        debug("checkWebResult: Rejecting on error: %o", webResult);
+        return Promise.reject(webResult);
+    } else {
+        debug("checkWebResult: Resolving with code: %s", webResult);
+        return Promise.resolve(webResult);
+    }
 }
 
 async function imsLogin(ims, config) {
-  return canSupport(config)
-    .then(() => setupWeb(ims, config))
-    .then(checkWebResult)
-    .then(authorizationCode => ims.getAccessToken(authorizationCode, config.client_id, config.client_secret, config.scope))
+    return canSupport(config)
+        .then(() => setupWeb(ims, config))
+        .then(checkWebResult)
+        .then(authorizationCode => ims.getAccessToken(authorizationCode, config.client_id, config.client_secret, config.scope))
 }
 
 module.exports = {
-  supports: canSupportSync,
-  imsLogin
+    supports: canSupportSync,
+    imsLogin
 }

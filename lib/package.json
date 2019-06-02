@@ -1,0 +1,6 @@
+{
+    "name": "aio-cli-plugin-ims-oauth",
+    "description": "Electron app to drive SUSI",
+    "productName": "AdobeIO CLI IMS OAuth",
+    "main": "./main.js"
+}
