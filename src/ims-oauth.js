@@ -61,6 +61,10 @@ let webResult = undefined;
  * access token or an Error object providing a message indicating
  * the reason for failure.
  * This result is assigned to the webResult variable.
+ *
+ * @param result {string | Error} The result of running the Electron app,
+ *          which may be a string in the success case or an Error if the
+ *          authorization code is not provided.
  */
 function electronCallback(result) {
     webResult = result ? result : new Error("No result received from web app");
