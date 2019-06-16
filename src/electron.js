@@ -21,7 +21,7 @@ class Electron {
 
     launch(exitCallback) {
         const args = [
-            "./lib",
+            `${__dirname}/../lib`,
             this.appUrl,
             this.callbackUrl
         ];
