@@ -13,7 +13,7 @@ governing permissions and limitations under the License.
 const Electron = require('./electron');
 const url = require('url');
 const querystring = require('querystring');
-const debug = require('debug')('@adobe/aio-cli-plugin-ims-oauth/login');
+const debug = require('debug')('@adobe/aio-cli-plugin-ims-oauth/ims-oauth');
 
 
 // The ims-login hook for OAuth2 (SUSI) is taking care of calling IMS
@@ -67,13 +67,15 @@ let webResult = undefined;
  *          authorization code is not provided.
  */
 function electronCallback(result) {
+    debug("electronCallback(%o)", result);
     webResult = result ? result : new Error("No result received from web app");
-    debug(webResult);
+    debug("  > %o", webResult);
 }
 
 async function setupWeb(ims, config) {
     debug("setupWeb(%o)", config);
     const appUrl = ims.getSusiUrl(config.client_id, config.scope, config.callback_url, config.state);
+    debug("  > appUrl=%s", appUrl);
     electron = new Electron(appUrl, config.callback_url).launch(electronCallback);
 }
 

@@ -12,6 +12,7 @@ governing permissions and limitations under the License.
 
 const electronPath = require('electron');
 const { execFile } = require('child_process');
+const debug = require('debug')('@adobe/aio-cli-plugin-ims-oauth/electron');
 
 class Electron {
     constructor(appUrl, callbackUrl) {
@@ -20,6 +21,8 @@ class Electron {
     }
 
     launch(exitCallback) {
+        debug("launch(%o)", exitCallback);
+
         const args = [
             `${__dirname}/../lib`,
             this.appUrl,
@@ -30,8 +33,10 @@ class Electron {
             args,
             (err, stdout, stderr) => {
                 if (err) {
+                    debug("  > ERR: %s", stderr);
                     exitCallback(new Error(stderr));
                 } else {
+                    debug("  > OK: %s", stdout);
                     exitCallback(stdout);
                 }
             }
