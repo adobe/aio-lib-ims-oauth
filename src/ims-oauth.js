@@ -11,8 +11,6 @@ governing permissions and limitations under the License.
 */
 
 const Electron = require('./electron');
-const url = require('url');
-const querystring = require('querystring');
 const debug = require('debug')('@adobe/aio-cli-plugin-ims-oauth/ims-oauth');
 
 
@@ -66,15 +64,15 @@ let webResult = undefined;
  *          which may be a string in the success case or an Error if the
  *          authorization code is not provided.
  */
-function electronCallback(result) {
-    debug("electronCallback(%o)", result);
+function electronCallback(result, state) {
+    debug("electronCallback(%o, %s)", result, state);
     webResult = result ? result : new Error("No result received from web app");
     debug("  > %o", webResult);
 }
 
-async function setupWeb(ims, config) {
+async function setupWeb(ims, config, state) {
     debug("setupWeb(%o)", config);
-    const appUrl = ims.getSusiUrl(config.client_id, config.scope, config.callback_url, config.state);
+    const appUrl = ims.getSusiUrl(config.client_id, config.scope, config.callback_url, state);
     debug("  > appUrl=%s", appUrl);
     electron = new Electron(appUrl, config.callback_url).launch(electronCallback);
 }
@@ -93,8 +91,9 @@ async function checkWebResult() {
 }
 
 async function imsLogin(ims, config) {
+    const state = "oauth-imslogin-" + Date.now();
     return canSupport(config)
-        .then(() => setupWeb(ims, config))
+        .then(() => setupWeb(ims, config, state))
         .then(checkWebResult)
         .then(authorizationCode => ims.getAccessToken(authorizationCode, config.client_id, config.client_secret, config.scope))
 }

@@ -34,10 +34,12 @@ class Electron {
             (err, stdout, stderr) => {
                 if (err) {
                     debug("  > ERR: %s", stderr);
-                    exitCallback(new Error(stderr));
+                    const error = JSON.parse(stderr);
+                    exitCallback(new Error(error.message), error.state);
                 } else {
                     debug("  > OK: %s", stdout);
-                    exitCallback(stdout);
+                    const result = JSON.parse(stdout);
+                    exitCallback(result.code, result.state);
                 }
             }
         );
