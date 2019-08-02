@@ -1,13 +1,13 @@
 adobeio-cna-core-ims-oauth
 ==========================
 
-OAuth2 (SUSI) token creation plugin for [`adobeio-cna-core-ims`](https://git.corp.adobe.com/fmeschbe/adobeio-cna-core-ims).
+OAuth2 (SUSI) token creation plugin for [`adobeio-cna-core-ims`](https://github.com/adobe/adobeio-cna-core-ims).
 
 [![Version](https://img.shields.io/npm/v/adobeio-cna-core-ims-oauth.svg)](https://npmjs.org/package/adobeio-cna-core-ims-oauth)
 [![Downloads/week](https://img.shields.io/npm/dw/adobeio-cna-core-ims-oauth.svg)](https://npmjs.org/package/adobeio-cna-core-ims-oauth)
-[![License](https://img.shields.io/npm/l/adobeio-cna-core-ims-oauth.svg)](https://github.com/fmeschbe/adobeio-cna-core-ims-oauth/blob/master/package.json)
+[![License](https://img.shields.io/npm/l/adobeio-cna-core-ims-oauth.svg)](https://github.com/adobe/adobeio-cna-core-ims-oauth/blob/master/package.json)
 
-This plugin is intended to be used in conjunction with the [`adobeio-cna-core-ims`](https://git.corp.adobe.com/fmeschbe/adobeio-cna-core-ims) extending that to support browser based 3-legged OAuth2 authentication with IMS commonly known as _SUSI flow_. For more information about the general setup of the Adobe I/O CLI IMS Plugin, please refer to the [wiki](https://git.corp.adobe.com/fmeschbe/adobeio-cna-core-ims/wiki).
+This plugin is intended to be used in conjunction with the [`adobeio-cna-core-ims`](https://github.com/adobe/adobeio-cna-core-ims) extending that to support browser based 3-legged OAuth2 authentication with IMS commonly known as _SUSI flow_. For more information about the general setup of the Adobe I/O CLI IMS Plugin, please refer to the [wiki](https://github.com/adobe/adobeio-cna-core-ims/wiki).
 
 The 3-legged OAuth2 requires interaction with a browser as the initial authentication step to receive the authorization code may be involving multiple browser based steps. For example an IMS Enterprise integration may involve further redirects to a 3rd party for actual authentication.
 
