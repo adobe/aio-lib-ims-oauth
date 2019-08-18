@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const Electron = require('./electron');
-const debug = require('debug')('@adobe/adobeio-cna-core-ims-oauth/ims-oauth');
+const debug = require('debug')('@adobe/aio-cna-core-ims-oauth/ims-oauth');
 
 // The ims-login hook for OAuth2 (SUSI) is taking care of calling IMS
 // the function takes the
