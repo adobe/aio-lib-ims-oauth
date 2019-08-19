@@ -28,3 +28,12 @@ The launcher will inspect the exit code of the Electron app and set and call the
 * In the case of failure, an Error object with the message from `stderr` is provided to the callback function.
 
 The call back function then sets the `webResult` variable with this result for it to be picked up by the `checkWebResult` function for further processing as a `Promise` and returning to the IMS plugin.
+
+
+# Contributing
+Contributions are welcomed! Read the [Contributing Guide](CONTRIBUTING.md) for more information.
+
+
+# Licensing
+
+This project is licensed under the Apache V2 License. See [LICENSE](LICENSE) for more information.
