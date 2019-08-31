@@ -29,6 +29,12 @@ The launcher will inspect the exit code of the Electron app and set and call the
 
 The call back function then sets the `webResult` variable with this result for it to be picked up by the `checkWebResult` function for further processing as a `Promise` and returning to the IMS plugin.
 
+# Forcing Login
+
+The Electron app is based on Google Chromium so it is keeping cached information such as cookies and local storage.
+IMS' login experience will store certain setup in cookies to improve the user's experience.
+This is not always desired for SDK use cases.
+Therefore this plugin implements support for the `force` parameter to the `imsLogin` function by removing any and all cached information in Chromiums user profile to restart from a clean slate.
 
 # Contributing
 Contributions are welcomed! Read the [Contributing Guide](CONTRIBUTING.md) for more information.

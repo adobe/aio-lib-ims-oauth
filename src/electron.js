@@ -15,9 +15,10 @@ const { execFile } = require('child_process');
 const debug = require('debug')('@adobe/aio-cna-core-ims-oauth/electron');
 
 class Electron {
-    constructor(appUrl, callbackUrl) {
+    constructor(appUrl, callbackUrl, force) {
         this.appUrl = appUrl;
         this.callbackUrl = callbackUrl;
+        this.force = force;
     }
 
     launch(exitCallback) {
@@ -26,7 +27,8 @@ class Electron {
         const args = [
             `${__dirname}/../lib`,
             this.appUrl,
-            this.callbackUrl
+            this.callbackUrl,
+            this.force
         ];
 
         this.childProcess = execFile(electronPath,

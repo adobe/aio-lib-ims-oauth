@@ -69,11 +69,11 @@ function electronCallback(result, state) {
     debug("  > %o", webResult);
 }
 
-async function setupWeb(ims, config, state) {
-    debug("setupWeb(%o)", config);
+async function setupWeb(ims, config, state, force) {
+    debug("setupWeb(config=%o, state=%s, force=%s)", config, force);
     const appUrl = ims.getSusiUrl(config.client_id, config.scope, config.callback_url, state);
     debug("  > appUrl=%s", appUrl);
-    electron = new Electron(appUrl, config.callback_url).launch(electronCallback);
+    electron = new Electron(appUrl, config.callback_url, force).launch(electronCallback);
 }
 
 async function checkWebResult() {
@@ -89,10 +89,10 @@ async function checkWebResult() {
     }
 }
 
-async function imsLogin(ims, config) {
+async function imsLogin(ims, config, force) {
     const state = "oauth-imslogin-" + Date.now();
     return canSupport(config)
-        .then(() => setupWeb(ims, config, state))
+        .then(() => setupWeb(ims, config, state, force))
         .then(checkWebResult)
         .then(authorizationCode => ims.getAccessToken(authorizationCode, config.client_id, config.client_secret, config.scope))
 }
