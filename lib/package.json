@@ -1,6 +1,6 @@
 {
-    "name": "aio-cna-core-ims-oauth",
+    "name": "aio-lib-core-ims-oauth",
     "description": "Electron app to drive SUSI",
-    "productName": "Adobe IO CNA Core IMS OAuth",
+    "productName": "Adobe IO Lib Core IMS OAuth",
     "main": "./main.js"
 }

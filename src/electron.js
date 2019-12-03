@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 const electronPath = require('electron');
 const { execFile } = require('child_process');
-const debug = require('debug')('@adobe/aio-cna-core-ims-oauth/electron');
+const debug = require('debug')('@adobe/aio-lib-core-ims-oauth/electron');
 
 class Electron {
     constructor(appUrl, callbackUrl, force) {

@@ -1,14 +1,14 @@
 {
-  "name": "@adobe/aio-cna-core-ims-oauth",
-  "description": "OAuth2 (SUSI) token creation plugin for @adobe/aio-cna-core-ims",
+  "name": "@adobe/aio-lib-core-ims-oauth",
+  "description": "OAuth2 (SUSI) token creation plugin for @adobe/aio-lib-core-ims",
   "version": "1.0.0",
   "author": "Felix Meschberger @fmeschbe",
-  "bugs": "https://github.com/adobe/aio-cna-core-ims-oauth/issues",
+  "bugs": "https://github.com/adobe/aio-lib-core-ims-oauth/issues",
   "dependencies": {
     "electron": "^5.0.2"
   },
   "peerDependencies": {
-    "@adobe/aio-cna-core-ims": "^1.0.0"
+    "@adobe/aio-lib-core-ims": "^1.0.0"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
@@ -21,10 +21,10 @@
     "/lib",
     "/src"
   ],
-  "homepage": "https://github.com/adobe/aio-cna-core-ims-oauth",
+  "homepage": "https://github.com/adobe/aio-lib-core-ims-oauth",
   "license": "Apache-2.0",
   "main": "./src/ims-oauth.js",
-  "repository": "https://github.com/adobe/aio-cna-core-ims-oauth",
+  "repository": "https://github.com/adobe/aio-lib-core-ims-oauth",
   "scripts": {
     "posttest": "eslint .",
     "test": "echo NO TESTS",
