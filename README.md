@@ -1,4 +1,4 @@
-aio-lib-core-ims-oauth
+@adobe/aio-lib-core-ims-oauth
 ==========================
 
 OAuth2 (SUSI) token creation plugin for [`aio-lib-core-ims`](https://github.com/adobe/aio-lib-core-ims).
