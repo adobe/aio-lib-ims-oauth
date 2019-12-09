@@ -16,29 +16,32 @@ const debug = require('debug')('@adobe/aio-lib-core-ims-oauth/ims-oauth');
 // The ims-login hook for OAuth2 (SUSI) is taking care of calling IMS
 // the function takes the
 
-function canSupportSync(configData) {
+function configMissingKeys(configData) {
     if (!configData) {
         return false;
     }
 
-    const missing_keys = [];
-    const required_keys = ['callback_url', 'client_id', 'client_secret', 'scope'];
+    const missingKeys = [];
+    const requiredKeys = ['callback_url', 'client_id', 'client_secret', 'scope'];
 
-    required_keys.forEach(key => {
+    requiredKeys.forEach(key => {
         if (!configData[key]) {
-            missing_keys.push(key)
+            missingKeys.push(key)
         }
     })
 
-    return missing_keys.length == 0;
+    return missingKeys
 }
 
+const canSupportSync = (configData) => configMissingKeys(configData).length === 0
+
 async function canSupport(configData) {
-    if (canSupportSync(configData)) {
-        return Promise.resolve(true);
+    const missingKeys = configMissingKeys(configData)
+    if (missingKeys.length === 0) {
+          return Promise.resolve(true);
     } else {
         // TODO: Indicate that this is not really an error but just a possibility
-        return Promise.reject(`OAuth2 not supported due to some missing properties: ${missing_keys}`);
+        return Promise.reject(`OAuth2 not supported due to some missing properties: ${missingKeys}`);
     }
 }
 
