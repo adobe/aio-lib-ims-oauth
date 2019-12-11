@@ -5,7 +5,7 @@
   "author": "Adobe Inc.",
   "bugs": "https://github.com/adobe/aio-lib-core-ims-oauth/issues",
   "dependencies": {
-    "electron": "^5.0.2"
+    "electron": "^7.1.4"
   },
   "peerDependencies": {
     "@adobe/aio-lib-core-ims": "^0.0.1"
@@ -20,7 +20,7 @@
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "globby": "^8.0.2"
+    "globby": "^10.0.1"
   },
   "engines": {
     "node": ">=8.0.0"
