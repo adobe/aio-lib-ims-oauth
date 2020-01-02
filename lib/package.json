@@ -1,6 +1,0 @@
-{
-    "name": "aio-lib-core-ims-oauth",
-    "description": "Electron app to drive SUSI",
-    "productName": "Adobe IO Lib Core IMS OAuth",
-    "main": "./main.js"
-}

@@ -5,10 +5,12 @@
   "author": "Adobe Inc.",
   "bugs": "https://github.com/adobe/aio-lib-core-ims-oauth/issues",
   "dependencies": {
-    "electron": "^7.1.4"
+    "cli-ux": "^5.3.3",
+    "debug": "^4.1.1",
+    "ora": "^4.0.3"
   },
   "peerDependencies": {
-    "@adobe/aio-lib-core-ims": "^0.0.1"
+    "@adobe/aio-lib-core-ims": "^0.0.3"
   },
   "devDependencies": {
     "@adobe/eslint-config-aio-lib-config": "^1.0.2",
@@ -29,7 +31,6 @@
     "node": ">=10.0.0"
   },
   "files": [
-    "/lib",
     "/src"
   ],
   "homepage": "https://github.com/adobe/aio-lib-core-ims-oauth",
