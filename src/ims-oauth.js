@@ -1,5 +1,5 @@
 /*
-Copyright 2018 Adobe. All rights reserved.
+Copyright 2019 Adobe. All rights reserved.
 This file is licensed to you under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License. You may obtain a copy
 of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -10,8 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const Electron = require('./electron')
-const debug = require('debug')('@adobe/aio-lib-core-ims-oauth/ims-oauth')
+const login = require('./login')
 
 function configMissingKeys (configData) {
   if (!configData) {
@@ -19,7 +18,7 @@ function configMissingKeys (configData) {
   }
 
   const missingKeys = []
-  const requiredKeys = ['callback_url', 'client_id', 'client_secret', 'scope']
+  const requiredKeys = ['auth_url', 'client_id', 'client_secret', 'scope', 'port']
 
   requiredKeys.forEach(key => {
     if (!configData[key]) {
@@ -41,58 +40,9 @@ async function canSupport (configData) {
   }
 }
 
-// The result of the browser and proxy interaction, which can take values
-// as follows:
-//   > access token result: If the user authenticated successfully and the
-//           getAccessToken function received the access token
-//   > Error object as follows:
-//         (1) if the user kills the browser before completing
-//         (2) if the access token cannot be generated after the user provided
-//             the credentials
-let gWebResult
-
-/**
- * Called when the Electron app driving the SUSI flow terminates.
- * The result parameter is either the authorization code to get the
- * access token or an Error object providing a message indicating
- * the reason for failure.
- * This result is assigned to the webResult variable.
- *
- * @param result {string | Error} The result of running the Electron app,
- *          which may be a string in the success case or an Error if the
- *          authorization code is not provided.
- */
-function electronCallback (result, state) {
-  debug('electronCallback(%o, %s)', result, state)
-  gWebResult = result || new Error('No result received from web app')
-  debug('  > %o', gWebResult)
-}
-
-async function setupWeb (ims, config, state, force) {
-  debug('setupWeb(config=%o, state=%s, force=%s)', config, force)
-  const appUrl = ims.getSusiUrl(config.client_id, config.scope, config.callback_url, state)
-  debug('  > appUrl=%s', appUrl)
-  return new Electron(appUrl, config.callback_url, force).launch(electronCallback)
-}
-
-async function checkWebResult () {
-  if (!gWebResult) {
-    debug('checkWebResult: No result yet, continue polling')
-    return new Promise(resolve => setTimeout(resolve.bind(null), 100)).then(checkWebResult)
-  } else if (gWebResult instanceof Error) {
-    debug('checkWebResult: Rejecting on error: %o', gWebResult)
-    return Promise.reject(gWebResult)
-  } else {
-    debug('checkWebResult: Resolving with code: %s', gWebResult)
-    return Promise.resolve(gWebResult)
-  }
-}
-
 async function imsLogin (ims, config, force) {
-  const state = 'oauth-imslogin-' + Date.now()
   return canSupport(config)
-    .then(() => setupWeb(ims, config, state, force))
-    .then(checkWebResult)
+    .then(() => login(config))
     .then(authorizationCode => ims.getAccessToken(authorizationCode, config.client_id, config.client_secret, config.scope))
 }
 

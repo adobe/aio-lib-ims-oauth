@@ -1,8 +1,9 @@
 /*
-Copyright 2019 Adobe. All rights reserved.
+Copyright 2018 Adobe. All rights reserved.
 This file is licensed to you under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License. You may obtain a copy
 of the License at http://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software distributed under
 the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
 OF ANY KIND, either express or implied. See the License for the specific language
@@ -10,30 +11,21 @@ governing permissions and limitations under the License.
 */
 
 const plugin = require('../src/ims-oauth')
-const Electron = require('../src/electron')
+const login = require('../src/login')
 
-jest.mock('../src/electron')
+jest.mock('../src/login')
 
 const gIms = {
-  getAccessToken: jest.fn(),
-  getApiUrl: jest.fn(),
-  getSusiUrl: jest.fn()
+  getAccessToken: jest.fn()
 }
 
 const gConfig = {
   client_id: 'my-client-id',
   client_secret: 'my-client-secret',
-  scope: 'my,scope',
-  callback_url: 'my-callback-url'
+  scope: 'my,meta,scopes',
+  port: 8000,
+  auth_url: 'https://auth.url'
 }
-
-beforeAll(() => {
-  jest.useRealTimers()
-})
-
-afterAll(() => {
-  jest.useFakeTimers()
-})
 
 beforeEach(() => {
   jest.restoreAllMocks()
@@ -54,48 +46,16 @@ test('imsLogin() interface', async () => {
   const myAccessToken = 'my-access-token'
   const myAuthCode = 'my-auth-code'
 
-  gIms.getAccessToken.mockImplementation((authCode, clientId, clientSecret, scope) => {
-    expect(authCode).toEqual(myAuthCode)
-    expect(clientId).toEqual(gConfig.client_id)
-    expect(clientSecret).toEqual(gConfig.client_secret)
-    expect(scope).toEqual(gConfig.scope)
-    return 'my-access-token'
+  login.mockImplementation((config) => {
+    return myAuthCode
   })
 
-  // successful login, with auth code returned
-  Electron.mockImplementation(() => {
-    return {
-      launch: (electronCallback) => {
-        setTimeout(() => { // use for polling the electron result in the plugin
-          electronCallback(myAuthCode)
-        }, 500)
-      }
-    }
+  gIms.getAccessToken.mockImplementation((authorizationCode, clientId, clientSecret, scope) => {
+    return myAccessToken
   })
 
+  // normal acceptable config
   await expect(plugin.imsLogin(gIms, gConfig)).resolves.toEqual(myAccessToken)
-
-  // error login, with Error returned
-  Electron.mockImplementation(() => {
-    return {
-      launch: (electronCallback) => {
-        electronCallback(new Error('there was a problem'))
-      }
-    }
-  })
-  // normal properties
-  await expect(plugin.imsLogin(gIms, gConfig)).rejects.toEqual(new Error('there was a problem'))
-
-  // error login, result undefined
-  Electron.mockImplementation(() => {
-    return {
-      launch: (electronCallback) => {
-        electronCallback()
-      }
-    }
-  })
-  // normal properties
-  await expect(plugin.imsLogin(gIms, gConfig)).rejects.toEqual(new Error('No result received from web app'))
 
   // config missing a property
   const configMissingProperties = Object.assign({}, gConfig)
