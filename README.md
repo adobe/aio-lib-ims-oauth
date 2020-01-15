@@ -21,7 +21,7 @@ Workflow:
 1. A 4-byte random pass-code is generated
 2. A localhost web server is created, listening at a port number
 3. An Adobe I/O Runtime web action is opened in the browser, passing in this pass-code, the localhost web server port number, the client id, and the IMS scope as query parameters
-3. The Adobe I/O Runtime web action will redirect to the IMS authorization endpoint, with the scope, client id and a csrf token as the `state` property (derived from the id, client id, scope and localhost port) passed in as query parameters
+3. The Adobe I/O Runtime web action will redirect to the IMS authorization endpoint, with the scope, client id and a [csrf](https://en.wikipedia.org/wiki/Cross-site_request_forgery) token as the `state` property (derived from the id, client id, scope and localhost port) passed in as query parameters
 4. When the user is authenticated or an error occurs, the IMS endpoint will redirect to the Adobe I/O Runtime web action's `login-success` path
 5. If the authentication is successful, the Adobe I/O Runtime web action will redirect to the localhost web server at the specified port (derived from the `state` property), and forward the `state` and `code` properties to the localhost web server call as query parameters
 6. The localhost web server will pass on the authorization code to the library, and the library will call an IMS endpoint to exchange the authorization code for an access token and refresh token
