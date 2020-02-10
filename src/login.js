@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Adobe. All rights reserved.
+Copyright 2020 Adobe. All rights reserved.
 This file is licensed to you under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License. You may obtain a copy
 of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -10,57 +10,74 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
+const debug = require('debug')('aio-lib-core-ims-oauth/login')
 const ora = require('ora')
 const { cli } = require('cli-ux')
-const { createServer, randomId, authSiteUrl } = require('./helpers')
+const { randomId, authSiteUrl, createServer, getQueryDataFromRequest, stringToJson } = require('./helpers')
 
 const AUTH_TIMEOUT_SECONDS = 120
+const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appLogin/'
 
 /**
- * Gets the access token for a logged in user.
+ * Gets the access token / auth code for a signed in user.
  *
- * @private
- * @param {object} config an object with config details
- * @param {string} config.client_id the client id of the OAuth2 integration
- * @param {string} config.client_secret the client secret of the OAuth2 integration
- * @param {string} config.scope the scope of the OAuth2 integration
- * @param {number} config.port the port number for the server
- * @param {number} config.timeout the number of seconds to timeout in checking
+ * @param {object} options the optional configuration
+ * @param {number} [options.bare=false] set to true to not have any progress text
+ * @param {number} [options.timeout] the timeout in seconds
+ * @param {string} [options.client_id] the client id of the OAuth2 integration
+ * @param {string} [options.scope] the scope of the OAuth2 integration
+ * @param {string} [options.redirect_uri] the redirect uri of the OAuth2 integration
  */
-async function login (config) {
+async function login (options) {
+  // eslint-disable-next-line camelcase
+  const { bare = false, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, redirect_uri } = options
   const id = randomId()
+  const server = await createServer()
+  const serverPort = server.address().port
+  const uri = authSiteUrl(AUTH_URL, { id, port: serverPort, client_id, scope, redirect_uri })
 
-  const uri = authSiteUrl(config.auth_url, { id, port: config.port, clientId: config.client_id, scope: config.scope })
-  const timeoutSeconds = config.timeout || AUTH_TIMEOUT_SECONDS
+  debug(`Local server created on port ${serverPort}.`)
 
   return new Promise((resolve, reject) => {
     let spinner
 
-    const timerId = setTimeout(() => {
-      reject(new Error(`Timed out after ${timeoutSeconds} seconds.`))
-      spinner.stop()
-    }, timeoutSeconds * 1000)
-
-    createServer({ port: (config.port || 8000) })
-      .then(state => {
-        if (state.code && state.id === id) {
-          spinner.info('Exchanging auth code for token')
-          clearTimeout(timerId)
-          resolve(state.code)
-        } else {
-          clearTimeout(timerId)
-          reject(new Error(`error code=${state.code}`))
-        }
-      })
-
-    /** @private */
-    async function launch () {
+    if (!bare) {
       console.log('Visit this url to log in: ')
       cli.url(uri, uri)
-      cli.open(uri)
       spinner = ora('Logging in').start()
     }
-    launch()
+    cli.open(uri)
+
+    const timerId = setTimeout(() => {
+      reject(new Error(`Timed out after ${timeout} seconds.`))
+      if (!bare) {
+        spinner.stop()
+      }
+    }, timeout * 1000)
+
+    server.on('request', (request, response) => {
+      const queryData = getQueryDataFromRequest(request)
+      debug(`queryData: ${JSON.stringify(queryData, null, 2)}`)
+      const state = stringToJson(queryData.state)
+      debug(`state: ${JSON.stringify(state)}`)
+
+      if (queryData.code && state.id === id) {
+        if (!bare) {
+          spinner.info(`Got ${queryData.code_type}`)
+        }
+        clearTimeout(timerId)
+        resolve(queryData.code)
+      } else {
+        clearTimeout(timerId)
+        reject(new Error(`error code=${queryData.code}`))
+      }
+
+      response.statusCode = 200
+      response.setHeader('Content-Type', 'text/plain')
+      response.end('You are now signed in, please close this window.\n')
+
+      server.close()
+    })
   })
 }
 

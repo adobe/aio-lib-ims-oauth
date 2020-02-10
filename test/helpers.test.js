@@ -10,7 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const { createServer, randomId, authSiteUrl } = require('../src/helpers')
+const { stringToJson, iterableToObject, getQueryDataFromRequest, randomId, authSiteUrl, createServer } = require('../src/helpers')
 const http = require('http')
 
 jest.mock('http')
@@ -34,56 +34,45 @@ test('exports', () => {
 })
 
 test('createServer', async () => {
-  const state = {
-    code: 'my-auth-code'
-  }
-
   const server = {
-    listen: jest.fn((port, hostname, callback) => {
-      setTimeout(callback, 500)
-    }),
-    close: jest.fn()
+    listen: jest.fn(),
+    close: jest.fn(),
+    on: jest.fn((event, callback) => {
+      if (event === 'listening') {
+        setTimeout(callback, 100)
+      }
+    })
   }
 
   http.createServer.mockImplementation(callback => {
-    const req = {
-      headers: {
-        host: 'my-server.com'
-      },
-      url: `/foo/bar?state={}&code=${state.code}`
-    }
-
-    const res = {
-      end: jest.fn(),
-      setHeader: jest.fn(),
-      statusCode: 0
-    }
-
-    setTimeout(() => callback(req, res), 500)
     return server
   })
 
-  await expect(createServer()).resolves.toEqual(state)
+  await expect(createServer()).resolves.toEqual(server)
+})
 
-  http.createServer.mockImplementation(callback => {
-    const req = {
-      headers: {
-        host: 'my-server.com'
-      },
-      url: '/foo/bar/'
-    }
+test('stringToJson', () => {
+  expect(stringToJson('{')).toEqual({})
+  expect(stringToJson('{ "foo": "bar" }')).toEqual({ foo: 'bar' })
+})
 
-    const res = {
-      end: jest.fn(),
-      setHeader: jest.fn(),
-      statusCode: 0
-    }
+test('iterableToObject', () => {
+  const params = new URLSearchParams()
+  expect(iterableToObject(params)).toEqual({})
 
-    setTimeout(() => callback(req, res), 500)
-    return server
-  })
+  params.set('foo', 'bar')
+  expect(iterableToObject(params)).toEqual({ foo: 'bar' })
+})
 
-  await expect(createServer()).rejects.toEqual(new Error('No query data to get the authorization code from'))
+test('getQueryDataFromRequest', () => {
+  let request
+  const host = 'http://foo.bar/'
+
+  request = { url: `${host}?foo=bar`, headers: { host } }
+  expect(getQueryDataFromRequest(request)).toEqual({ foo: 'bar' })
+
+  request = { url: host, headers: { host } }
+  expect(getQueryDataFromRequest(request)).toEqual({})
 })
 
 test('randomId', () => {
