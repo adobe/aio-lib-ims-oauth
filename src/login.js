@@ -19,12 +19,13 @@ const AUTH_TIMEOUT_SECONDS = 120
 /**
  * Gets the access token for a logged in user.
  *
+ * @private
  * @param {object} config an object with config details
  * @param {string} config.client_id the client id of the OAuth2 integration
  * @param {string} config.client_secret the client secret of the OAuth2 integration
  * @param {string} config.scope the scope of the OAuth2 integration
- * @param {integer} config.port the port number for the server
- * @param {integer} config.timeout the number of seconds to timeout in checking
+ * @param {number} config.port the port number for the server
+ * @param {number} config.timeout the number of seconds to timeout in checking
  */
 async function login (config) {
   const id = randomId()
@@ -52,6 +53,7 @@ async function login (config) {
         }
       })
 
+    /** @private */
     async function launch () {
       console.log('Visit this url to log in: ')
       cli.url(uri, uri)
