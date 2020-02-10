@@ -29,7 +29,7 @@ const AUTH_PORT = 8000
 async function login (config) {
   const id = randomId()
 
-  const uri = authSiteUrl(AUTH_URL, { id, port: AUTH_PORT, client_id: config.client_id, scope: config.scope })
+  const uri = authSiteUrl(AUTH_URL, { id, port: AUTH_PORT, client_id: config.client_id, scope: config.scope, redirect_uri: config.redirect_uri })
   const timeoutSeconds = config.timeout || AUTH_TIMEOUT_SECONDS
 
   return new Promise((resolve, reject) => {
