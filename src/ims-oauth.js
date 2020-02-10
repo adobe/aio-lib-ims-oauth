@@ -12,6 +12,13 @@ governing permissions and limitations under the License.
 
 const login = require('./login')
 
+/**
+ * Checks whether the configuration data is missing any required keys.
+ *
+ * @private
+ * @param {object} configData the confiuration data to check
+ * @returns {Array} an array of missing keys, if any
+ */
 function configMissingKeys (configData) {
   if (!configData) {
     return false
@@ -31,6 +38,12 @@ function configMissingKeys (configData) {
 
 const canSupportSync = (configData) => configMissingKeys(configData).length === 0
 
+/**
+ * Checks whether this IMS plugin can support the config data.
+ *
+ * @param {object} configData the confiuration data to check
+ * @returns {Promise} resolves to true, if the config data is supported, rejects with an error if it's not
+ */
 async function canSupport (configData) {
   const missingKeys = configMissingKeys(configData)
   if (missingKeys.length === 0) {
@@ -40,6 +53,14 @@ async function canSupport (configData) {
   }
 }
 
+/**
+ * Logs in the user.
+ *
+ * @param {object} ims the Ims object
+ * @param {object} config the configuration data
+ * @param {boolean} force force login (don't use cached data)
+ * @returns {Promise<string>} a Promise with the results of the login (access token)
+ */
 async function imsLogin (ims, config, force) {
   return canSupport(config)
     .then(() => login(config))

@@ -18,7 +18,8 @@ const crypto = require('crypto')
 /**
  * Create a local server to wait for browser callback.
  *
- * @param {*} options
+ * @param {object} options the options for the local server
+ * @returns {Promise} a Promise that resolves with the result data from a browser callback
  */
 async function createServer ({ hostname = '127.0.0.1', port = 8000 } = {}) {
   return new Promise((resolve, reject) => {
@@ -50,7 +51,9 @@ async function createServer ({ hostname = '127.0.0.1', port = 8000 } = {}) {
 /**
  * Construct the auth site url with these query params.
  *
- * @param {*} queryParams
+ * @param {string} _url the url to append the query parameters to
+ * @param {object} queryParams query parameters to encode
+ * @returns {string} the encoded url
  */
 function authSiteUrl (_url, queryParams) {
   const uri = new url.URL(_url)
@@ -62,6 +65,8 @@ function authSiteUrl (_url, queryParams) {
 
 /**
  * Generates a random 4 character hex id.
+ *
+ * @returns {string} a random string
  */
 const randomId = () => crypto.randomBytes(4).toString('hex')
 
