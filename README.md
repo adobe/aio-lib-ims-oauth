@@ -36,11 +36,10 @@ Add the `oauth2` context into your `.aio` file in your current working directory
 {
   $ims: {
     oauth2: {
-        auth_url: "YOUR_AUTH_URL_IN_IO_RUNTIME",
+        redirect_uri: "YOUR_REDIRECT_URI",
         client_id: "YOUR_CLIENT_ID",
         client_secret: "YOUR_CLIENT_SECRET",
         scope: "YOUR_IMS_SCOPE"
-        port: 8000
     }
   }
 }

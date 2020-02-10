@@ -15,22 +15,21 @@ const { cli } = require('cli-ux')
 const { createServer, randomId, authSiteUrl } = require('./helpers')
 
 const AUTH_TIMEOUT_SECONDS = 120
-
+const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appLogin/'
+const AUTH_PORT = 8000
 /**
  * Gets the access token for a logged in user.
  *
  * @private
  * @param {object} config an object with config details
  * @param {string} config.client_id the client id of the OAuth2 integration
- * @param {string} config.client_secret the client secret of the OAuth2 integration
  * @param {string} config.scope the scope of the OAuth2 integration
- * @param {number} config.port the port number for the server
  * @param {number} config.timeout the number of seconds to timeout in checking
  */
 async function login (config) {
   const id = randomId()
 
-  const uri = authSiteUrl(config.auth_url, { id, port: config.port, clientId: config.client_id, scope: config.scope })
+  const uri = authSiteUrl(AUTH_URL, { id, port: AUTH_PORT, client_id: config.client_id, scope: config.scope })
   const timeoutSeconds = config.timeout || AUTH_TIMEOUT_SECONDS
 
   return new Promise((resolve, reject) => {
@@ -41,7 +40,7 @@ async function login (config) {
       spinner.stop()
     }, timeoutSeconds * 1000)
 
-    createServer({ port: (config.port || 8000) })
+    createServer({ port: AUTH_PORT })
       .then(state => {
         if (state.code && state.id === id) {
           spinner.info('Exchanging auth code for token')
