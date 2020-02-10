@@ -124,6 +124,7 @@ test('login', async () => {
   const myRandomId = 'random-id'
   const myPort = 8000
   const myHost = 'http://my.host'
+  const myTimeout = 1
   const myState = {
     id: myRandomId,
     port: myPort
@@ -155,9 +156,9 @@ test('login', async () => {
   })
 
   // Timeout not bare (default)
-  await expect(login({ ...gConfig, timeout: 1 })).rejects.toEqual(new Error('Timed out after 1 seconds.'))
+  await expect(login({ ...gConfig, timeout: myTimeout })).rejects.toEqual(new Error(`Timed out after ${myTimeout} seconds.`))
   // Timeout bare
-  await expect(login({ ...gConfig, timeout: 1, bare: true })).rejects.toEqual(new Error('Timed out after 1 seconds.'))
+  await expect(login({ ...gConfig, timeout: myTimeout, bare: true })).rejects.toEqual(new Error(`Timed out after ${myTimeout} seconds.`))
 
   // Error (state id does not match)
   request = createMockRequest(myHost, { id: 'this-was-changed-somewhere', port: myPort }, myAuthCode)
@@ -166,5 +167,5 @@ test('login', async () => {
       resolve(createMockServer(request, gMockResponse, myPort))
     })
   })
-  await expect(login(gConfig)).rejects.toEqual(new Error('error code=my-auth-code'))
+  await expect(login(gConfig)).rejects.toEqual(new Error(`error code=${myAuthCode}`))
 })
