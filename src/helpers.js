@@ -40,7 +40,9 @@ async function createServer () {
 function authSiteUrl (_url, queryParams) {
   const uri = new url.URL(_url)
   Object.keys(queryParams).forEach(key => {
-    uri.searchParams.set(key, queryParams[key])
+    if (queryParams[key]) {
+      uri.searchParams.set(key, queryParams[key])
+    }
   })
   return uri.href
 }
