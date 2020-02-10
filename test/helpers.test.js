@@ -84,8 +84,12 @@ test('randomId', () => {
 })
 
 test('authSiteUrl', () => {
-  const url = 'https://adobe.com'
-  const queryParams = { a: 'b', c: 'd' }
+  const host = 'https://adobe.com'
+  let queryParams
 
-  expect(authSiteUrl(url, queryParams)).toEqual('https://adobe.com/?a=b&c=d')
+  queryParams = { a: 'b', c: 'd' }
+  expect(authSiteUrl(host, queryParams)).toEqual(`${host}/?a=b&c=d`)
+
+  queryParams = { a: 'b', c: 'd', e: undefined, f: null }
+  expect(authSiteUrl(host, queryParams)).toEqual(`${host}/?a=b&c=d`)
 })
