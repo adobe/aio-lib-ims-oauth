@@ -144,6 +144,9 @@ test('login', async () => {
   expect(cli.url.mock.calls.length).toEqual(1)
   expect(cli.open.mock.calls.length).toEqual(1)
 
+  // Success (bare output)
+  await expect(login({ ...gConfig, bare: true })).resolves.toEqual(myAuthCode)
+
   // Timeout
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
@@ -151,7 +154,10 @@ test('login', async () => {
     })
   })
 
+  // Timeout not bare (default)
   await expect(login({ ...gConfig, timeout: 1 })).rejects.toEqual(new Error('Timed out after 1 seconds.'))
+  // Timeout bare
+  await expect(login({ ...gConfig, timeout: 1, bare: true })).rejects.toEqual(new Error('Timed out after 1 seconds.'))
 
   // Error (state id does not match)
   request = createMockRequest(myHost, { id: 'this-was-changed-somewhere', port: myPort }, myAuthCode)
