@@ -22,6 +22,7 @@ const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appL
  * Gets the access token / auth code for a signed in user.
  *
  * @param {object} options the optional configuration
+ * @param {number} [options.bare=false] set to true to not have any progress text
  * @param {number} [options.timeout] the timeout in seconds
  * @param {string} [options.client_id] the client id of the OAuth2 integration
  * @param {string} [options.scope] the scope of the OAuth2 integration
@@ -29,7 +30,7 @@ const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appL
  */
 async function login (options) {
   // eslint-disable-next-line camelcase
-  const { timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, redirect_uri } = options
+  const { bare = false, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, redirect_uri } = options
   const id = randomId()
   const server = await createServer()
   const serverPort = server.address().port
@@ -38,14 +39,20 @@ async function login (options) {
   debug(`Local server created on port ${serverPort}.`)
 
   return new Promise((resolve, reject) => {
-    console.log('Visit this url to log in: ')
-    cli.url(uri, uri)
+    let spinner
+
+    if (!bare) {
+      console.log('Visit this url to log in: ')
+      cli.url(uri, uri)
+      spinner = ora('Logging in').start()
+    }
     cli.open(uri)
-    const spinner = ora('Logging in').start()
 
     const timerId = setTimeout(() => {
       reject(new Error(`Timed out after ${timeout} seconds.`))
-      spinner.stop()
+      if (!bare) {
+        spinner.stop()
+      }
     }, timeout * 1000)
 
     server.on('request', (request, response) => {
@@ -55,7 +62,9 @@ async function login (options) {
       debug(`state: ${JSON.stringify(state)}`)
 
       if (queryData.code && state.id === id) {
-        spinner.info(`Got ${queryData.code_type}`)
+        if (!bare) {
+          spinner.info(`Got ${queryData.code_type}`)
+        }
         clearTimeout(timerId)
         resolve(queryData.code)
       } else {
