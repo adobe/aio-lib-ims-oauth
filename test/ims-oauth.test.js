@@ -23,8 +23,7 @@ const gConfig = {
   client_id: 'my-client-id',
   client_secret: 'my-client-secret',
   scope: 'my,meta,scopes',
-  port: 8000,
-  auth_url: 'https://auth.url'
+  redirect_uri: 'https://auth.url'
 }
 
 beforeEach(() => {
