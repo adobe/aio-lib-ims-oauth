@@ -1,5 +1,5 @@
 /*
-Copyright 2019 Adobe. All rights reserved.
+Copyright 2020 Adobe. All rights reserved.
 This file is licensed to you under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License. You may obtain a copy
 of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -11,39 +11,21 @@ governing permissions and limitations under the License.
 */
 
 const http = require('http')
-const debug = require('debug')('aio-cli-plugin-oauth2')
 const url = require('url')
 const crypto = require('crypto')
 
 /**
- * Create a local server to wait for browser callback.
+ * Create a local server.
  *
- * @param {object} options the options for the local server
- * @returns {Promise} a Promise that resolves with the result data from a browser callback
+ * @returns {Promise} resolves to the http.server created, after it has started
  */
-async function createServer ({ hostname = '127.0.0.1', port = 8000 } = {}) {
-  return new Promise((resolve, reject) => {
-    const server = http.createServer((req, res) => {
-      const _url = new url.URL(req.url, `http://${req.headers.host}`)
-      const queryData = _url.searchParams
-      let state
+async function createServer () {
+  return new Promise(resolve => {
+    const server = http.createServer()
 
-      if (queryData && (state = queryData.get('state'))) {
-        const resultData = JSON.parse(state)
-        resultData.code = queryData.get('code')
-        resolve(resultData)
-      } else {
-        reject(new Error('No query data to get the authorization code from'))
-      }
-
-      res.statusCode = 200
-      res.setHeader('Content-Type', 'text/plain')
-      res.end('You are now logged in, you may close this window\n')
-
-      server.close()
-    })
-    server.listen(port, hostname, () => {
-      debug(`Login callback server running at http://${hostname}:${port}/`)
+    server.listen(0, '127.0.0.1')
+    server.on('listening', () => {
+      resolve(server)
     })
   })
 }
@@ -51,9 +33,9 @@ async function createServer ({ hostname = '127.0.0.1', port = 8000 } = {}) {
 /**
  * Construct the auth site url with these query params.
  *
- * @param {string} _url the url to append the query parameters to
- * @param {object} queryParams query parameters to encode
- * @returns {string} the encoded url
+ * @param {string} _url the url to construct
+ * @param {object} queryParams the query params to add to the url
+ * @returns {string} the constructed url
  */
 function authSiteUrl (_url, queryParams) {
   const uri = new url.URL(_url)
@@ -70,8 +52,55 @@ function authSiteUrl (_url, queryParams) {
  */
 const randomId = () => crypto.randomBytes(4).toString('hex')
 
+/**
+ * Gets the relevant query data from the request query parameters.
+ *
+ * @param {*} request a Request object
+ * @returns {object} an object containing the request's query data
+ */
+function getQueryDataFromRequest (request) {
+  const _url = new url.URL(request.url, `http://${request.headers.host}`)
+  const queryData = _url.searchParams
+
+  return iterableToObject(queryData.entries())
+}
+
+/**
+ * Convert an iterable to an object.
+ *
+ * @private
+ * @param {object} entries an iterator
+ * @returns {object} the converted iterator as an object
+ **/
+function iterableToObject (entries) {
+  const result = {}
+  for (const entry of entries) {
+    const [key, value] = entry
+    result[key] = value
+  }
+  return result
+}
+
+/**
+ * Safe convert from string to json.
+ *
+ * @private
+ * @param {string} value the value to parse to json
+ * @returns {object} the json object converted from the input
+ **/
+function stringToJson (value) {
+  try {
+    return JSON.parse(value)
+  } catch (e) {
+    return {}
+  }
+}
+
 module.exports = {
-  createServer,
+  stringToJson,
+  iterableToObject,
+  getQueryDataFromRequest,
   randomId,
-  authSiteUrl
+  authSiteUrl,
+  createServer
 }
