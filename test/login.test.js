@@ -85,13 +85,14 @@ function createMockServer (request, response, port, delayTriggerMs = 100) {
  * @param {string} host the host name
  * @param {object} state the state object
  * @param {string} authCode the auth code
+ * @param {string} code_type one of 'auth_code' or 'access_token'
  * @returns {object} the mock Request object
  */
-function createMockRequest (host, state, authCode) {
+function createMockRequest (host, state, authCode, code_type = 'auth_code') {
   const _url = new url.URL(host)
   _url.searchParams.set('state', JSON.stringify(state))
   _url.searchParams.set('code', authCode)
-  _url.searchParams.set('code_type', 'auth_code')
+  _url.searchParams.set('code_type', code_type)
 
   return {
     url: _url.toString(),
@@ -121,6 +122,7 @@ test('exports', () => {
 
 test('login', async () => {
   const myAuthCode = 'my-auth-code'
+  const myAccessToken = { access_token: { token: 'my-access-token', expiry: 123 } }
   const myRandomId = 'random-id'
   const myPort = 8000
   const myHost = 'http://my.host'
@@ -134,7 +136,7 @@ test('login', async () => {
   helpers.randomId.mockImplementation(() => myRandomId)
 
   // Success (got auth code)
-  request = createMockRequest(myHost, myState, myAuthCode)
+  request = createMockRequest(myHost, myState, myAuthCode, 'auth_code')
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
       resolve(createMockServer(request, gMockResponse, myPort))
@@ -145,8 +147,17 @@ test('login', async () => {
   expect(cli.url.mock.calls.length).toEqual(1)
   expect(cli.open.mock.calls.length).toEqual(1)
 
+  // Success (got access token)
+  request = createMockRequest(myHost, myState, JSON.stringify(myAccessToken), 'access_token')
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer(request, gMockResponse, myPort))
+    })
+  })
+  await expect(login(gConfig)).resolves.toEqual(myAccessToken)
+
   // Success (bare output)
-  await expect(login({ ...gConfig, bare: true })).resolves.toEqual(myAuthCode)
+  await expect(login({ ...gConfig, bare: true })).resolves.toEqual(myAccessToken)
 
   // Timeout
   helpers.createServer.mockImplementation(() => {

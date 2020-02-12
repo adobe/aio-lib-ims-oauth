@@ -62,11 +62,15 @@ async function login (options) {
       debug(`state: ${JSON.stringify(state)}`)
 
       if (queryData.code && state.id === id) {
+        let result = queryData.code
         if (!bare) {
           spinner.info(`Got ${queryData.code_type}`)
         }
         clearTimeout(timerId)
-        resolve(queryData.code)
+        if (queryData.code_type === 'access_token') {
+          result = JSON.parse(result)
+        }
+        resolve(result)
       } else {
         clearTimeout(timerId)
         reject(new Error(`error code=${queryData.code}`))

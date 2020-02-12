@@ -13,6 +13,8 @@ const login = require('./login')
 
 const CLI_BARE_OUTPUT = '$cli.bare-output'
 
+const isEmpty = (value) => (value === undefined || value === null)
+
 /**
  * Returns the missing keys (if any) in the configuration data.
  *
@@ -29,7 +31,7 @@ function configMissingKeys (configData) {
   const requiredKeys = [CLI_BARE_OUTPUT]
 
   requiredKeys.forEach(key => {
-    if (!configData[key]) {
+    if (isEmpty(configData[key])) {
       missingKeys.push(key)
     }
   })
