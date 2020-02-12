@@ -55,7 +55,48 @@ async function login (options) {
       }
     }, timeout * 1000)
 
+    const handleOptions = (request, response) => {
+      response.setHeader('Content-Type', 'text/plain')
+      response.setHeader('Access-Control-Allow-Origin', 'https://adobeioruntime.net')
+      response.setHeader('Access-Control-Request-Method', '*')
+      response.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
+      response.setHeader('Access-Control-Allow-Headers', '*')
+
+      response.end()
+    }
+
+    const handleGet = async (request, response) => {
+      const queryData = getQueryDataFromRequest(request)
+      debug(`queryData: ${JSON.stringify(queryData, null, 2)}`)
+      const state = stringToJson(queryData.state)
+      debug(`state: ${JSON.stringify(state)}`)
+
+      if (queryData.code && state.id === id) {
+        let result = queryData.code
+        if (!bare) {
+          spinner.info(`Got ${queryData.code_type}`)
+        }
+        clearTimeout(timerId)
+        if (queryData.code_type === 'access_token') {
+          result = JSON.parse(result)
+        }
+        return Promise.resolve(result)
+      } else {
+        clearTimeout(timerId)
+        return Promise.reject(new Error(`error code=${queryData.code}`))
+      } 
+
+      response.statusCode = 200
+      response.end('You are now signed in, please close this window.\n')
+    }
+
     server.on('request', (request, response) => {
+      debug(`http method: ${request.method}`)
+
+      if (request.method === 'OPTIONS') {
+        return handleOptions(request, response)
+      }
+
       const queryData = getQueryDataFromRequest(request)
       debug(`queryData: ${JSON.stringify(queryData, null, 2)}`)
       const state = stringToJson(queryData.state)
@@ -77,7 +118,6 @@ async function login (options) {
       }
 
       response.statusCode = 200
-      response.setHeader('Content-Type', 'text/plain')
       response.end('You are now signed in, please close this window.\n')
 
       server.close()
