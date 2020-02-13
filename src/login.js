@@ -18,6 +18,32 @@ const { randomId, authSiteUrl, createServer, getQueryDataFromRequest, stringToJs
 const AUTH_TIMEOUT_SECONDS = 120
 const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appLogin/'
 
+
+const cors = (response) => {
+  response.setHeader('Content-Type', 'text/plain')
+  response.setHeader('Access-Control-Allow-Origin', 'https://adobeioruntime.net')
+  response.setHeader('Access-Control-Request-Method', '*')
+  response.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST')
+  response.setHeader('Access-Control-Allow-Headers', '*')
+
+  return response
+}
+
+const handleOPTIONS = (request, response) => {
+  cors(response).end()
+}
+
+const handlePOST = (request, response, callback) => {
+  cors(response)
+  // TODO:
+}
+
+const handleUnsupportedHttpMethod = (request, response, callback) => {
+  cors(response)
+  response.statusCode = 405
+  response.end('Supported HTTP methods are OPTIONS, POST')
+}
+
 /**
  * Gets the access token / auth code for a signed in user.
  *
@@ -55,72 +81,47 @@ async function login (options) {
       }
     }, timeout * 1000)
 
-    const handleOptions = (request, response) => {
-      response.setHeader('Content-Type', 'text/plain')
-      response.setHeader('Access-Control-Allow-Origin', 'https://adobeioruntime.net')
-      response.setHeader('Access-Control-Request-Method', '*')
-      response.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST, GET')
-      response.setHeader('Access-Control-Allow-Headers', '*')
-
-      response.end()
-    }
-
-    const handleGet = async (request, response) => {
-      const queryData = getQueryDataFromRequest(request)
-      debug(`queryData: ${JSON.stringify(queryData, null, 2)}`)
-      const state = stringToJson(queryData.state)
-      debug(`state: ${JSON.stringify(state)}`)
-
-      if (queryData.code && state.id === id) {
-        let result = queryData.code
-        if (!bare) {
-          spinner.info(`Got ${queryData.code_type}`)
-        }
-        clearTimeout(timerId)
-        if (queryData.code_type === 'access_token') {
-          result = JSON.parse(result)
-        }
-        return Promise.resolve(result)
-      } else {
-        clearTimeout(timerId)
-        return Promise.reject(new Error(`error code=${queryData.code}`))
-      } 
-
-      response.statusCode = 200
-      response.end('You are now signed in, please close this window.\n')
-    }
-
     server.on('request', (request, response) => {
       debug(`http method: ${request.method}`)
 
-      if (request.method === 'OPTIONS') {
-        return handleOptions(request, response)
+      const cleanup = () => {
+        clearTimeout(timerId)
+        server.close()
       }
 
-      const queryData = getQueryDataFromRequest(request)
-      debug(`queryData: ${JSON.stringify(queryData, null, 2)}`)
-      const state = stringToJson(queryData.state)
-      debug(`state: ${JSON.stringify(state)}`)
-
-      if (queryData.code && state.id === id) {
-        let result = queryData.code
-        if (!bare) {
-          spinner.info(`Got ${queryData.code_type}`)
-        }
-        clearTimeout(timerId)
-        if (queryData.code_type === 'access_token') {
-          result = JSON.parse(result)
-        }
-        resolve(result)
-      } else {
-        clearTimeout(timerId)
-        reject(new Error(`error code=${queryData.code}`))
+      switch (request.method) {
+        case 'OPTIONS':
+          return handleOPTIONS(request, response)
+        case 'POST':
+          return handlePOST(request, response, cleanup)
+        default:
+          return handleUnsupportedHttpMethod(request, response)
       }
 
-      response.statusCode = 200
-      response.end('You are now signed in, please close this window.\n')
+      // const queryData = getQueryDataFromRequest(request)
+      // debug(`queryData: ${JSON.stringify(queryData, null, 2)}`)
+      // const state = stringToJson(queryData.state)
+      // debug(`state: ${JSON.stringify(state)}`)
 
-      server.close()
+      // if (queryData.code && state.id === id) {
+      //   let result = queryData.code
+      //   if (!bare) {
+      //     spinner.info(`Got ${queryData.code_type}`)
+      //   }
+      //   clearTimeout(timerId)
+      //   if (queryData.code_type === 'access_token') {
+      //     result = JSON.parse(result)
+      //   }
+      //   resolve(result)
+      // } else {
+      //   clearTimeout(timerId)
+      //   reject(new Error(`error code=${queryData.code}`))
+      // }
+
+      // response.statusCode = 200
+      // response.end('You are now signed in, please close this window.\n')
+
+      // server.close()
     })
   })
 }
