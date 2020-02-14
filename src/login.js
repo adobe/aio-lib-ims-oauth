@@ -11,6 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const debug = require('debug')('aio-lib-core-ims-oauth/login')
+const querystring = require('querystring')
 const ora = require('ora')
 const { cli } = require('cli-ux')
 const { randomId, authSiteUrl, createServer, getQueryDataFromRequest, stringToJson } = require('./helpers')
@@ -20,6 +21,7 @@ const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appL
 
 
 const cors = (response) => {
+  // TODO: get origin from AUTH_URL
   response.setHeader('Content-Type', 'text/plain')
   response.setHeader('Access-Control-Allow-Origin', 'https://adobeioruntime.net')
   response.setHeader('Access-Control-Request-Method', '*')
@@ -33,15 +35,51 @@ const handleOPTIONS = (request, response) => {
   cors(response).end()
 }
 
-const handlePOST = (request, response, callback) => {
+const processPOST = async (body) => {
+  return new Promise((resolve, reject) => {
+    const queryData = querystring.parse(body)
+
+    const state = stringToJson(queryData.state)
+    debug(`state: ${JSON.stringify(state)}`)
+  
+    if (queryData.code && state.id === id) {
+      let result = queryData.code
+
+      if (!bare) {
+        spinner.info(`Got ${queryData.code_type}`)
+      }
+
+      if (queryData.code_type === 'access_token') {
+        result = JSON.parse(result)
+      }
+      resolve(result)
+    } else {
+      reject(new Error(`error code=${queryData.code}`))
+    }
+  
+    response.statusCode = 200
+    response.end('You are now signed in, please close this window.')
+  })
+}
+
+const handlePOST = (request, response, done) => {
   cors(response)
-  // TODO:
+  let body = ''
+
+  request.on('data', data => {
+    body += data.toString()
+  })
+
+  request.on('end', () => {
+    return processPOST(body)
+    response.end('ok')
+    done()
+  })
 }
 
 const handleUnsupportedHttpMethod = (request, response, callback) => {
-  cors(response)
   response.statusCode = 405
-  response.end('Supported HTTP methods are OPTIONS, POST')
+  cors(response).end('Supported HTTP methods are OPTIONS, POST')
 }
 
 /**
@@ -98,30 +136,6 @@ async function login (options) {
           return handleUnsupportedHttpMethod(request, response)
       }
 
-      // const queryData = getQueryDataFromRequest(request)
-      // debug(`queryData: ${JSON.stringify(queryData, null, 2)}`)
-      // const state = stringToJson(queryData.state)
-      // debug(`state: ${JSON.stringify(state)}`)
-
-      // if (queryData.code && state.id === id) {
-      //   let result = queryData.code
-      //   if (!bare) {
-      //     spinner.info(`Got ${queryData.code_type}`)
-      //   }
-      //   clearTimeout(timerId)
-      //   if (queryData.code_type === 'access_token') {
-      //     result = JSON.parse(result)
-      //   }
-      //   resolve(result)
-      // } else {
-      //   clearTimeout(timerId)
-      //   reject(new Error(`error code=${queryData.code}`))
-      // }
-
-      // response.statusCode = 200
-      // response.end('You are now signed in, please close this window.\n')
-
-      // server.close()
     })
   })
 }
