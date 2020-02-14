@@ -10,10 +10,21 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const { stringToJson, iterableToObject, getQueryDataFromRequest, randomId, authSiteUrl, createServer } = require('../src/helpers')
+const {
+  AUTH_URL, randomId, authSiteUrl, createServer, handlePOST, stringToJson, handleUnsupportedHttpMethod,
+  handleOPTIONS, codeTransform
+} = require('../src/helpers')
+
 const http = require('http')
+const querystring = require('querystring')
 
 jest.mock('http')
+
+const gMockResponse = {
+  setHeader: jest.fn(),
+  end: jest.fn(),
+  statusCode: null
+}
 
 beforeAll(() => {
   jest.useRealTimers()
@@ -56,25 +67,6 @@ test('stringToJson', () => {
   expect(stringToJson('{ "foo": "bar" }')).toEqual({ foo: 'bar' })
 })
 
-test('iterableToObject', () => {
-  const params = new URLSearchParams()
-  expect(iterableToObject(params)).toEqual({})
-
-  params.set('foo', 'bar')
-  expect(iterableToObject(params)).toEqual({ foo: 'bar' })
-})
-
-test('getQueryDataFromRequest', () => {
-  let request
-  const host = 'http://foo.bar/'
-
-  request = { url: `${host}?foo=bar`, headers: { host } }
-  expect(getQueryDataFromRequest(request)).toEqual({ foo: 'bar' })
-
-  request = { url: host, headers: { host } }
-  expect(getQueryDataFromRequest(request)).toEqual({})
-})
-
 test('randomId', () => {
   const r1 = randomId()
   const r2 = randomId()
@@ -84,12 +76,83 @@ test('randomId', () => {
 })
 
 test('authSiteUrl', () => {
-  const host = 'https://adobe.com'
   let queryParams
 
   queryParams = { a: 'b', c: 'd' }
-  expect(authSiteUrl(host, queryParams)).toEqual(`${host}/?a=b&c=d`)
+  expect(authSiteUrl(queryParams)).toEqual(`${AUTH_URL}?a=b&c=d`)
 
   queryParams = { a: 'b', c: 'd', e: undefined, f: null }
-  expect(authSiteUrl(host, queryParams)).toEqual(`${host}/?a=b&c=d`)
+  expect(authSiteUrl(queryParams)).toEqual(`${AUTH_URL}?a=b&c=d`)
+})
+
+test('handlePOST', async () => {
+  const id = 'abcd'
+  let state = {}
+  let queryData = {}
+  const done = jest.fn()
+  const authCode = 'my-auth-code'
+
+  const createRequest = () => {
+    const evts = {}
+
+    return {
+      on: (event, callback) => {
+        evts[event] = callback
+      },
+      fire: (event, data) => {
+        evts[event] && evts[event](data)
+      }
+    }
+  }
+
+  const req = createRequest()
+  state = { id }
+  queryData = { code_type: 'auth_code', code: authCode, state: JSON.stringify(state) }
+
+  setTimeout(() => {
+    req.fire('data', querystring.stringify(queryData))
+    req.fire('end')
+  }, 100)
+  await expect(handlePOST(req, gMockResponse, id, done)).resolves.toEqual(authCode)
+
+  setTimeout(() => {
+    req.fire('data', querystring.stringify(queryData))
+    req.fire('end')
+  }, 100)
+  await expect(handlePOST(req, gMockResponse, 'an-altered-id', done)).rejects.toEqual(new Error(`error code=${authCode}`))
+})
+
+test('handleUnsupportedHttpMethod', async () => {
+  const req = { method: 'GET' }
+  const res = {
+    setHeader: jest.fn(),
+    end: jest.fn(),
+    statusCode: null
+  }
+
+  handleUnsupportedHttpMethod(req, res)
+  expect(res.statusCode).toEqual(405)
+  expect(res.end).toHaveBeenCalled()
+})
+
+test('handleOPTIONS', async () => {
+  const req = { method: 'OPTIONS' }
+  const res = {
+    setHeader: jest.fn(),
+    end: jest.fn(),
+    statusCode: null
+  }
+
+  handleOPTIONS(req, res)
+  expect(res.end).toHaveBeenCalled()
+})
+
+test('codeTransform', async () => {
+  let code
+
+  code = 'my-code'
+  expect(codeTransform(code, 'auth_code')).toEqual(code)
+
+  code = { access_token: 'my-access-token' }
+  expect(codeTransform(JSON.stringify(code), 'access_token')).toEqual(code)
 })

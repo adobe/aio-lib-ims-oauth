@@ -11,70 +11,11 @@ governing permissions and limitations under the License.
 */
 
 const debug = require('debug')('aio-lib-core-ims-oauth/login')
-const querystring = require('querystring')
 const ora = require('ora')
-const url = require('url')
 const { cli } = require('cli-ux')
-const { randomId, authSiteUrl, createServer, stringToJson } = require('./helpers')
+const { randomId, authSiteUrl, createServer, handleOPTIONS, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 
 const AUTH_TIMEOUT_SECONDS = 120
-const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appLogin/'
-
-const cors = (response) => {
-  response.setHeader('Content-Type', 'text/plain')
-  response.setHeader('Access-Control-Allow-Origin', new url.URL(AUTH_URL).origin)
-  response.setHeader('Access-Control-Request-Method', '*')
-  response.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST')
-  response.setHeader('Access-Control-Allow-Headers', '*')
-
-  return response
-}
-
-const codeTransform = (code, codeType) => {
-  if (codeType === 'access_token') {
-    return JSON.parse(code)
-  }
-
-  return code
-}
-
-const handleOPTIONS = (request, response) => {
-  cors(response).end()
-}
-
-const handlePOST = async (request, response, id, done) => {
-  return new Promise((resolve, reject) => {
-    cors(response)
-    let body = ''
-
-    request.on('data', data => {
-      body += data.toString()
-    })
-
-    request.on('end', async () => {
-      const queryData = querystring.parse(body)
-      const state = stringToJson(queryData.state)
-      debug(`state: ${JSON.stringify(state)}`)
-      debug(`queryData: ${JSON.stringify(queryData)}`)
-
-      if (queryData.code && state.id === id) {
-        resolve(codeTransform(queryData.code, queryData.code_type))
-        response.statusCode = 200
-        response.end('You are now signed in, please close this window.')
-      } else {
-        response.statusCode = 400
-        response.end('An error occurred in the cli.')
-        reject(new Error(`error code=${queryData.code}`))
-      }
-      done()
-    })
-  })
-}
-
-const handleUnsupportedHttpMethod = (request, response) => {
-  response.statusCode = 405
-  cors(response).end('Supported HTTP methods are OPTIONS, POST')
-}
 
 /**
  * Gets the access token / auth code for a signed in user.
@@ -92,7 +33,7 @@ async function login (options) {
   const id = randomId()
   const server = await createServer()
   const serverPort = server.address().port
-  const uri = authSiteUrl(AUTH_URL, { id, port: serverPort, client_id, scope, redirect_uri })
+  const uri = authSiteUrl({ id, port: serverPort, client_id, scope, redirect_uri })
 
   debug(`Local server created on port ${serverPort}.`)
 
@@ -118,7 +59,9 @@ async function login (options) {
 
       const cleanup = () => {
         clearTimeout(timerId)
-        spinner.stop()
+        if (!bare) {
+          spinner.stop()
+        }
         server.close()
       }
 
@@ -135,7 +78,9 @@ async function login (options) {
             return handleUnsupportedHttpMethod(request, response)
         }
       } catch (error) {
-        spinner.fail()
+        if (!bare) {
+          spinner.fail()
+        }
         reject(error)
       }
     })
