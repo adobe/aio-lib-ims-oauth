@@ -13,10 +13,9 @@ governing permissions and limitations under the License.
 const debug = require('debug')('aio-lib-core-ims-oauth/login')
 const ora = require('ora')
 const { cli } = require('cli-ux')
-const { randomId, authSiteUrl, createServer, getQueryDataFromRequest, stringToJson } = require('./helpers')
+const { randomId, authSiteUrl, createServer, handleOPTIONS, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 
 const AUTH_TIMEOUT_SECONDS = 120
-const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appLogin/'
 
 /**
  * Gets the access token / auth code for a signed in user.
@@ -34,7 +33,7 @@ async function login (options) {
   const id = randomId()
   const server = await createServer()
   const serverPort = server.address().port
-  const uri = authSiteUrl(AUTH_URL, { id, port: serverPort, client_id, scope, redirect_uri })
+  const uri = authSiteUrl({ id, port: serverPort, client_id, scope, redirect_uri })
 
   debug(`Local server created on port ${serverPort}.`)
 
@@ -55,32 +54,35 @@ async function login (options) {
       }
     }, timeout * 1000)
 
-    server.on('request', (request, response) => {
-      const queryData = getQueryDataFromRequest(request)
-      debug(`queryData: ${JSON.stringify(queryData, null, 2)}`)
-      const state = stringToJson(queryData.state)
-      debug(`state: ${JSON.stringify(state)}`)
+    server.on('request', async (request, response) => {
+      debug(`http method: ${request.method}`)
 
-      if (queryData.code && state.id === id) {
-        let result = queryData.code
+      const cleanup = () => {
+        clearTimeout(timerId)
         if (!bare) {
-          spinner.info(`Got ${queryData.code_type}`)
+          spinner.stop()
         }
-        clearTimeout(timerId)
-        if (queryData.code_type === 'access_token') {
-          result = JSON.parse(result)
-        }
-        resolve(result)
-      } else {
-        clearTimeout(timerId)
-        reject(new Error(`error code=${queryData.code}`))
+        server.close()
       }
 
-      response.statusCode = 200
-      response.setHeader('Content-Type', 'text/plain')
-      response.end('You are now signed in, please close this window.\n')
-
-      server.close()
+      try {
+        switch (request.method) {
+          case 'OPTIONS':
+            return handleOPTIONS(request, response)
+          case 'POST': {
+            const result = await handlePOST(request, response, id, cleanup)
+            resolve(result)
+          }
+            break
+          default:
+            return handleUnsupportedHttpMethod(request, response)
+        }
+      } catch (error) {
+        if (!bare) {
+          spinner.fail()
+        }
+        reject(error)
+      }
     })
   })
 }

@@ -14,7 +14,6 @@ const helpers = require('../src/helpers')
 const { cli } = require('cli-ux')
 const ora = require('ora')
 const login = require('../src/login')
-const url = require('url')
 
 // //////////////////////////////////////////
 
@@ -22,16 +21,13 @@ jest.mock('cli-ux')
 jest.mock('../src/helpers')
 jest.mock('ora')
 
-const { getQueryDataFromRequest, stringToJson } = jest.requireActual('../src/helpers')
-helpers.getQueryDataFromRequest.mockImplementation(getQueryDataFromRequest) // use actual
-helpers.stringToJson.mockImplementation(stringToJson) // use actual
-
 ora.mockImplementation(() => {
   return {
     start: () => {
       return {
         info: jest.fn(),
-        stop: jest.fn()
+        stop: jest.fn(),
+        fail: jest.fn()
       }
     }
   }
@@ -53,6 +49,7 @@ const gMockResponse = {
   end: jest.fn(),
   statusCode: null
 }
+
 /**
  * Create a mock http.server object
  *
@@ -63,7 +60,7 @@ const gMockResponse = {
  * @param {number} [delayTriggerMs=100] the delay in triggering the request callback
  * @returns {object} the mock http.server object
  */
-function createMockServer (request, response, port, delayTriggerMs = 100) {
+function createMockServer (request, response, port = 8000, delayTriggerMs = 100) {
   return {
     listen: jest.fn(),
     close: jest.fn(),
@@ -77,32 +74,6 @@ function createMockServer (request, response, port, delayTriggerMs = 100) {
     address: jest.fn(() => ({ port }))
   }
 }
-
-/**
- * Create a mock Request object.
- *
- * @private
- * @param {string} host the host name
- * @param {object} state the state object
- * @param {string} authCode the auth code
- * @param {string} code_type one of 'auth_code' or 'access_token'
- * @returns {object} the mock Request object
- */
-function createMockRequest (host, state, authCode, code_type = 'auth_code') {
-  const _url = new url.URL(host)
-  _url.searchParams.set('state', JSON.stringify(state))
-  _url.searchParams.set('code', authCode)
-  _url.searchParams.set('code_type', code_type)
-
-  return {
-    url: _url.toString(),
-    headers: {
-      host: host
-    }
-  }
-}
-
-// //////////////////////////////////////////
 
 beforeAll(() => {
   jest.useRealTimers()
@@ -124,45 +95,61 @@ test('login', async () => {
   const myAuthCode = 'my-auth-code'
   const myAccessToken = { access_token: { token: 'my-access-token', expiry: 123 } }
   const myRandomId = 'random-id'
-  const myPort = 8000
-  const myHost = 'http://my.host'
-  const myTimeout = 1
-  const myState = {
-    id: myRandomId,
-    port: myPort
-  }
-  let request
+  const request = { method: 'POST' }
 
   helpers.randomId.mockImplementation(() => myRandomId)
-
-  // Success (got auth code)
-  request = createMockRequest(myHost, myState, myAuthCode, 'auth_code')
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
-      resolve(createMockServer(request, gMockResponse, myPort))
+      resolve(createMockServer(request, gMockResponse))
     })
   })
 
+  const createPostResponse = (responseValue) => {
+    return async function (req, resp, id, done) {
+      done()
+      return responseValue
+    }
+  }
+
+  // Success (got auth code)
+  helpers.handlePOST.mockImplementation(await createPostResponse(myAuthCode))
   await expect(login(gConfig)).resolves.toEqual(myAuthCode)
   expect(cli.url.mock.calls.length).toEqual(1)
   expect(cli.open.mock.calls.length).toEqual(1)
 
   // Success (got access token)
-  request = createMockRequest(myHost, myState, JSON.stringify(myAccessToken), 'access_token')
-  helpers.createServer.mockImplementation(() => {
-    return new Promise(resolve => {
-      resolve(createMockServer(request, gMockResponse, myPort))
-    })
-  })
+  helpers.handlePOST.mockImplementation(await createPostResponse(myAccessToken))
   await expect(login(gConfig)).resolves.toEqual(myAccessToken)
 
   // Success (bare output)
+  helpers.handlePOST.mockImplementation(await createPostResponse(myAccessToken))
   await expect(login({ ...gConfig, bare: true })).resolves.toEqual(myAccessToken)
+})
 
-  // Timeout
+test('error', async () => {
+  const request = { method: 'POST' }
+  const myAuthCode = 'my-auth-code'
+
+  // Error (state id does not match)
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
-      resolve(createMockServer(request, gMockResponse, myPort, 10000))
+      resolve(createMockServer(request, gMockResponse))
+    })
+  })
+
+  const error = new Error(`error code=${myAuthCode}`)
+  helpers.handlePOST.mockImplementation(() => Promise.reject(error))
+  await expect(login(gConfig)).rejects.toEqual(error)
+
+  await expect(login({ ...gConfig, bare: true })).rejects.toEqual(error)
+})
+
+test('timeout', async () => {
+  const myTimeout = 1
+
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer({}, gMockResponse, null, 10000))
     })
   })
 
@@ -170,13 +157,39 @@ test('login', async () => {
   await expect(login({ ...gConfig, timeout: myTimeout })).rejects.toEqual(new Error(`Timed out after ${myTimeout} seconds.`))
   // Timeout bare
   await expect(login({ ...gConfig, timeout: myTimeout, bare: true })).rejects.toEqual(new Error(`Timed out after ${myTimeout} seconds.`))
+})
 
-  // Error (state id does not match)
-  request = createMockRequest(myHost, { id: 'this-was-changed-somewhere', port: myPort }, myAuthCode)
+test('unsupported http method', () => {
+  // Unsupported method
+  const request = { method: 'GET' }
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
-      resolve(createMockServer(request, gMockResponse, myPort))
+      resolve(createMockServer(request, gMockResponse))
     })
   })
-  await expect(login(gConfig)).rejects.toEqual(new Error(`error code=${myAuthCode}`))
+
+  return new Promise(resolve => {
+    helpers.handleUnsupportedHttpMethod.mockImplementation((req, res) => {
+      expect(req.method).toEqual('GET')
+      resolve()
+    })
+    login(gConfig)
+  })
+})
+
+test('OPTIONS http method', () => {
+  const request = { method: 'OPTIONS' }
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer(request, gMockResponse))
+    })
+  })
+
+  return new Promise(resolve => {
+    helpers.handleOPTIONS.mockImplementation((req, res) => {
+      expect(req.method).toEqual('OPTIONS')
+      resolve()
+    })
+    login(gConfig)
+  })
 })
