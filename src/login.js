@@ -13,17 +13,16 @@ governing permissions and limitations under the License.
 const debug = require('debug')('aio-lib-core-ims-oauth/login')
 const querystring = require('querystring')
 const ora = require('ora')
+const url = require('url')
 const { cli } = require('cli-ux')
-const { randomId, authSiteUrl, createServer, getQueryDataFromRequest, stringToJson } = require('./helpers')
+const { randomId, authSiteUrl, createServer, stringToJson } = require('./helpers')
 
 const AUTH_TIMEOUT_SECONDS = 120
 const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appLogin/'
 
-
 const cors = (response) => {
-  // TODO: get origin from AUTH_URL
   response.setHeader('Content-Type', 'text/plain')
-  response.setHeader('Access-Control-Allow-Origin', 'https://adobeioruntime.net')
+  response.setHeader('Access-Control-Allow-Origin', new url.URL(AUTH_URL).origin)
   response.setHeader('Access-Control-Request-Method', '*')
   response.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST')
   response.setHeader('Access-Control-Allow-Headers', '*')
@@ -31,53 +30,48 @@ const cors = (response) => {
   return response
 }
 
+const codeTransform = (code, codeType) => {
+  if (codeType === 'access_token') {
+    return JSON.parse(code)
+  }
+
+  return code
+}
+
 const handleOPTIONS = (request, response) => {
   cors(response).end()
 }
 
-const processPOST = async (body) => {
+const handlePOST = async (request, response, id, done) => {
   return new Promise((resolve, reject) => {
-    const queryData = querystring.parse(body)
+    cors(response)
+    let body = ''
 
-    const state = stringToJson(queryData.state)
-    debug(`state: ${JSON.stringify(state)}`)
-  
-    if (queryData.code && state.id === id) {
-      let result = queryData.code
+    request.on('data', data => {
+      body += data.toString()
+    })
 
-      if (!bare) {
-        spinner.info(`Got ${queryData.code_type}`)
+    request.on('end', async () => {
+      const queryData = querystring.parse(body)
+      const state = stringToJson(queryData.state)
+      debug(`state: ${JSON.stringify(state)}`)
+      debug(`queryData: ${JSON.stringify(queryData)}`)
+
+      if (queryData.code && state.id === id) {
+        resolve(codeTransform(queryData.code, queryData.code_type))
+        response.statusCode = 200
+        response.end('You are now signed in, please close this window.')
+      } else {
+        response.statusCode = 400
+        response.end('An error occurred in the cli.')
+        reject(new Error(`error code=${queryData.code}`))
       }
-
-      if (queryData.code_type === 'access_token') {
-        result = JSON.parse(result)
-      }
-      resolve(result)
-    } else {
-      reject(new Error(`error code=${queryData.code}`))
-    }
-  
-    response.statusCode = 200
-    response.end('You are now signed in, please close this window.')
+      done()
+    })
   })
 }
 
-const handlePOST = (request, response, done) => {
-  cors(response)
-  let body = ''
-
-  request.on('data', data => {
-    body += data.toString()
-  })
-
-  request.on('end', () => {
-    return processPOST(body)
-    response.end('ok')
-    done()
-  })
-}
-
-const handleUnsupportedHttpMethod = (request, response, callback) => {
+const handleUnsupportedHttpMethod = (request, response) => {
   response.statusCode = 405
   cors(response).end('Supported HTTP methods are OPTIONS, POST')
 }
@@ -119,23 +113,31 @@ async function login (options) {
       }
     }, timeout * 1000)
 
-    server.on('request', (request, response) => {
+    server.on('request', async (request, response) => {
       debug(`http method: ${request.method}`)
 
       const cleanup = () => {
         clearTimeout(timerId)
+        spinner.stop()
         server.close()
       }
 
-      switch (request.method) {
-        case 'OPTIONS':
-          return handleOPTIONS(request, response)
-        case 'POST':
-          return handlePOST(request, response, cleanup)
-        default:
-          return handleUnsupportedHttpMethod(request, response)
+      try {
+        switch (request.method) {
+          case 'OPTIONS':
+            return handleOPTIONS(request, response)
+          case 'POST': {
+            const result = await handlePOST(request, response, id, cleanup)
+            resolve(result)
+          }
+            break
+          default:
+            return handleUnsupportedHttpMethod(request, response)
+        }
+      } catch (error) {
+        spinner.fail()
+        reject(error)
       }
-
     })
   })
 }

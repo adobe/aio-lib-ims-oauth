@@ -56,35 +56,6 @@ function authSiteUrl (_url, queryParams) {
 const randomId = () => crypto.randomBytes(4).toString('hex')
 
 /**
- * Gets the relevant query data from the request query parameters.
- *
- * @param {*} request a Request object
- * @returns {object} an object containing the request's query data
- */
-function getQueryDataFromRequest (request) {
-  const _url = new url.URL(request.url, `http://${request.headers.host}`)
-  const queryData = _url.searchParams
-
-  return iterableToObject(queryData.entries())
-}
-
-/**
- * Convert an iterable to an object.
- *
- * @private
- * @param {object} entries an iterator
- * @returns {object} the converted iterator as an object
- **/
-function iterableToObject (entries) {
-  const result = {}
-  for (const entry of entries) {
-    const [key, value] = entry
-    result[key] = value
-  }
-  return result
-}
-
-/**
  * Safe convert from string to json.
  *
  * @private
@@ -101,8 +72,6 @@ function stringToJson (value) {
 
 module.exports = {
   stringToJson,
-  iterableToObject,
-  getQueryDataFromRequest,
   randomId,
   authSiteUrl,
   createServer
