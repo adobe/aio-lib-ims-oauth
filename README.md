@@ -1,5 +1,4 @@
-@adobe/aio-lib-ims-oauth
-==========================
+# OAuth support for Adobe I/O IMS Library
 
 OAuth2 (SUSI) token creation plugin for [`aio-lib-ims`](https://github.com/adobe/aio-lib-ims).
 
