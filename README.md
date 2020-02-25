@@ -1,18 +1,18 @@
-@adobe/aio-lib-core-ims-oauth
+@adobe/aio-lib-ims-oauth
 ==========================
 
-OAuth2 (SUSI) token creation plugin for [`aio-lib-core-ims`](https://github.com/adobe/aio-lib-core-ims).
+OAuth2 (SUSI) token creation plugin for [`aio-lib-ims`](https://github.com/adobe/aio-lib-ims).
 
-[![Version](https://img.shields.io/npm/v/@adobe/aio-lib-core-ims-oauth.svg)](https://npmjs.org/package/@adobe/aio-lib-core-ims-oauth)
-[![Downloads/week](https://img.shields.io/npm/dw/@adobe/aio-lib-core-ims-oauth.svg)](https://npmjs.org/package/@adobe/aio-lib-core-ims-oauth)
-[![Build Status](https://travis-ci.com/adobe/aio-lib-core-ims-oauth.svg?branch=master)](https://travis-ci.com/adobe/aio-lib-core-ims-oauth)
-[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-lib-core-ims-oauth/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-lib-core-ims-oauth/)
-[![License](https://img.shields.io/npm/l/@adobe/aio-lib-core-ims-oauth.svg)](https://github.com/adobe/aio-lib-core-ims-oauth/blob/master/package.json)
-[![Greenkeeper badge](https://badges.greenkeeper.io/adobe/aio-lib-core-ims-oauth.svg)](https://greenkeeper.io/)
+[![Version](https://img.shields.io/npm/v/@adobe/aio-lib-ims-oauth.svg)](https://npmjs.org/package/@adobe/aio-lib-ims-oauth)
+[![Downloads/week](https://img.shields.io/npm/dw/@adobe/aio-lib-ims-oauth.svg)](https://npmjs.org/package/@adobe/aio-lib-ims-oauth)
+[![Build Status](https://travis-ci.com/adobe/aio-lib-ims-oauth.svg?branch=master)](https://travis-ci.com/adobe/aio-lib-ims-oauth)
+[![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-lib-ims-oauth/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-lib-ims-oauth/)
+[![License](https://img.shields.io/npm/l/@adobe/aio-lib-ims-oauth.svg)](https://github.com/adobe/aio-lib-ims-oauth/blob/master/package.json)
+[![Greenkeeper badge](https://badges.greenkeeper.io/adobe/aio-lib-ims-oauth.svg)](https://greenkeeper.io/)
 
-This plugin is intended to be used in conjunction with the [`aio-lib-core-ims`](https://github.com/adobe/aio-lib-core-ims) extending that to support browser based 3-legged OAuth2 authentication with IMS commonly known as _SUSI flow_.
+This plugin is intended to be used in conjunction with the [`aio-lib-ims`](https://github.com/adobe/aio-lib-ims) extending that to support browser based 3-legged OAuth2 authentication with IMS commonly known as _SUSI flow_.
 
-For more information about the general setup of the Adobe I/O CLI IMS Plugin, please refer to [`aio-lib-core-ims`](https://github.com/adobe/aio-lib-core-ims).
+For more information about the general setup of the Adobe I/O CLI IMS Plugin, please refer to [`aio-lib-ims`](https://github.com/adobe/aio-lib-ims).
 
 The 3-legged OAuth2 requires interaction with a browser as the initial authentication step to receive the authorization code may be involving multiple browser based steps.
 For example an IMS Enterprise integration may involve further redirects to a 3rd party for actual authentication.

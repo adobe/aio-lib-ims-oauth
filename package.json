@@ -1,16 +1,16 @@
 {
-  "name": "@adobe/aio-lib-core-ims-oauth",
-  "description": "OAuth2 (SUSI) token creation plugin for @adobe/aio-lib-core-ims",
+  "name": "@adobe/aio-lib-ims-oauth",
+  "description": "OAuth2 (SUSI) token creation plugin for @adobe/aio-lib-ims",
   "version": "1.2.0",
   "author": "Adobe Inc.",
-  "bugs": "https://github.com/adobe/aio-lib-core-ims-oauth/issues",
+  "bugs": "https://github.com/adobe/aio-lib-ims-oauth/issues",
   "dependencies": {
     "cli-ux": "^5.3.3",
     "debug": "^4.1.1",
     "ora": "^4.0.3"
   },
   "peerDependencies": {
-    "@adobe/aio-lib-core-ims": "^0.0.3"
+    "@adobe/aio-lib-ims": "^1.0.0"
   },
   "devDependencies": {
     "@adobe/eslint-config-aio-lib-config": "^1.0.2",
@@ -34,10 +34,10 @@
   "files": [
     "/src"
   ],
-  "homepage": "https://github.com/adobe/aio-lib-core-ims-oauth",
+  "homepage": "https://github.com/adobe/aio-lib-ims-oauth",
   "license": "Apache-2.0",
   "main": "./src/ims-oauth.js",
-  "repository": "https://github.com/adobe/aio-lib-core-ims-oauth",
+  "repository": "https://github.com/adobe/aio-lib-ims-oauth",
   "scripts": {
     "pretest": "eslint .",
     "test": "npm run unit-tests",

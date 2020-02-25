@@ -13,7 +13,7 @@ governing permissions and limitations under the License.
 const http = require('http')
 const url = require('url')
 const crypto = require('crypto')
-const debug = require('debug')('aio-lib-core-ims-oauth/helpers')
+const debug = require('debug')('aio-lib-ims-oauth/helpers')
 const querystring = require('querystring')
 
 const AUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appLogin'

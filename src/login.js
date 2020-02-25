@@ -10,7 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const debug = require('debug')('aio-lib-core-ims-oauth/login')
+const debug = require('debug')('aio-lib-ims-oauth/login')
 const ora = require('ora')
 const { cli } = require('cli-ux')
 const { randomId, authSiteUrl, createServer, handleOPTIONS, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
