@@ -18,8 +18,9 @@ const querystring = require('querystring')
 
 // overridable via environment variable
 const {
-  IMS_CLI_OAUTH_URL = 'https://adobeioruntime.net/api/v1/web/53444_51636/default/appLogin'
+  IMS_CLI_OAUTH_URL = 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin'
 } = process.env
+debug('IMS_CLI_OAUTH_URL', IMS_CLI_OAUTH_URL)
 
 /**
  * Create a local server.
