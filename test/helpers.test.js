@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const {
-  AUTH_URL, randomId, authSiteUrl, createServer, handlePOST, stringToJson, handleUnsupportedHttpMethod,
+  IMS_CLI_OAUTH_URL, randomId, authSiteUrl, createServer, handlePOST, stringToJson, handleUnsupportedHttpMethod,
   handleOPTIONS, codeTransform
 } = require('../src/helpers')
 
@@ -79,10 +79,10 @@ test('authSiteUrl', () => {
   let queryParams
 
   queryParams = { a: 'b', c: 'd' }
-  expect(authSiteUrl(queryParams)).toEqual(`${AUTH_URL}?a=b&c=d`)
+  expect(authSiteUrl(queryParams)).toEqual(`${IMS_CLI_OAUTH_URL}?a=b&c=d`)
 
   queryParams = { a: 'b', c: 'd', e: undefined, f: null }
-  expect(authSiteUrl(queryParams)).toEqual(`${AUTH_URL}?a=b&c=d`)
+  expect(authSiteUrl(queryParams)).toEqual(`${IMS_CLI_OAUTH_URL}?a=b&c=d`)
 })
 
 test('handlePOST', async () => {
