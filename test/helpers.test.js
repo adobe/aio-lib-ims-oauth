@@ -76,13 +76,24 @@ test('randomId', () => {
 })
 
 test('authSiteUrl', () => {
-  let queryParams
+  let queryParams, env, url
 
+  // success (prod)
+  env = 'prod'
+  url = IMS_CLI_OAUTH_URL[env]
   queryParams = { a: 'b', c: 'd' }
-  expect(authSiteUrl(queryParams)).toEqual(`${IMS_CLI_OAUTH_URL}?a=b&c=d`)
+  expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
 
+  // coverage (default env)
+  env = undefined
   queryParams = { a: 'b', c: 'd', e: undefined, f: null }
-  expect(authSiteUrl(queryParams)).toEqual(`${IMS_CLI_OAUTH_URL}?a=b&c=d`)
+  expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
+
+  // success (stage)
+  env = 'stage'
+  url = IMS_CLI_OAUTH_URL[env]
+  queryParams = { a: 'b', c: 'd', e: undefined, f: null }
+  expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
 })
 
 test('handlePOST', async () => {

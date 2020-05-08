@@ -16,11 +16,12 @@ const crypto = require('crypto')
 const debug = require('debug')('aio-lib-ims-oauth/helpers')
 const querystring = require('querystring')
 
-// overridable via environment variable
-const {
-  IMS_CLI_OAUTH_URL = 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin'
-} = process.env
-debug('IMS_CLI_OAUTH_URL', IMS_CLI_OAUTH_URL)
+const DEFAULT_ENV = 'prod'
+
+const IMS_CLI_OAUTH_URL = {
+  prod: 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin',
+  stage: 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin-stage'
+}
 
 /**
  * Create a local server.
@@ -42,10 +43,11 @@ async function createServer () {
  * Construct the auth site url with these query params.
  *
  * @param {object} queryParams the query params to add to the url
+ * @param {string} [env=prod] the IMS environment
  * @returns {string} the constructed url
  */
-function authSiteUrl (queryParams) {
-  const uri = new url.URL(IMS_CLI_OAUTH_URL)
+function authSiteUrl (queryParams, env = DEFAULT_ENV) {
+  const uri = new url.URL(IMS_CLI_OAUTH_URL[env])
   Object.keys(queryParams).forEach(key => {
     const value = queryParams[key]
     if (value !== undefined && value !== null) {
@@ -81,11 +83,12 @@ function stringToJson (value) {
  * Sets the CORS headers to the response.
  *
  * @param {object} response the Response object
+ * @param {string} [env=prod] the IMS environment
  * @returns {object} return the Response object
  */
-function cors (response) {
+function cors (response, env = DEFAULT_ENV) {
   response.setHeader('Content-Type', 'text/plain')
-  response.setHeader('Access-Control-Allow-Origin', new url.URL(IMS_CLI_OAUTH_URL).origin)
+  response.setHeader('Access-Control-Allow-Origin', new url.URL(IMS_CLI_OAUTH_URL[env]).origin)
   response.setHeader('Access-Control-Request-Method', '*')
   response.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST')
   response.setHeader('Access-Control-Allow-Headers', '*')
