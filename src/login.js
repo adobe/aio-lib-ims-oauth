@@ -68,14 +68,14 @@ async function login (options) {
       try {
         switch (request.method) {
           case 'OPTIONS':
-            return handleOPTIONS(request, response)
+            return handleOPTIONS(request, response, env)
           case 'POST': {
-            const result = await handlePOST(request, response, id, cleanup)
+            const result = await handlePOST(request, response, id, cleanup, env)
             resolve(result)
           }
             break
           default:
-            return handleUnsupportedHttpMethod(request, response)
+            return handleUnsupportedHttpMethod(request, response, env)
         }
       } catch (error) {
         if (!bare) {

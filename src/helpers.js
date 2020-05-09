@@ -116,9 +116,10 @@ function codeTransform (code, codeType) {
  *
  * @param {object} request the Request object
  * @param {object} response the Response object
+ * @param {string} [env=prod] the IMS environment
  */
-function handleOPTIONS (request, response) {
-  cors(response).end()
+function handleOPTIONS (request, response, env = DEFAULT_ENV) {
+  cors(response, env).end()
 }
 
 /**
@@ -128,11 +129,12 @@ function handleOPTIONS (request, response) {
  * @param {object} response the Response object
  * @param {string} id the secret id to compare to from the request 'state' data
  * @param {Function} done callback function
+ * @param {string} [env=prod] the IMS environment
  * @returns {Promise} resolves to the auth code or access_Token
  */
-async function handlePOST (request, response, id, done) {
+async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
   return new Promise((resolve, reject) => {
-    cors(response)
+    cors(response, env)
     let body = ''
 
     request.on('data', data => {
@@ -164,10 +166,11 @@ async function handlePOST (request, response, id, done) {
  *
  * @param {object} request the Request object
  * @param {object} response the Response object
+ * @param {string} [env=prod] the IMS environment
  */
-function handleUnsupportedHttpMethod (request, response) {
+function handleUnsupportedHttpMethod (request, response, env = DEFAULT_ENV) {
   response.statusCode = 405
-  cors(response).end('Supported HTTP methods are OPTIONS, POST')
+  cors(response, env).end('Supported HTTP methods are OPTIONS, POST')
 }
 
 module.exports = {

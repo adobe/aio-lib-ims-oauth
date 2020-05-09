@@ -11,12 +11,13 @@ governing permissions and limitations under the License.
 */
 
 const {
-  IMS_CLI_OAUTH_URL, randomId, authSiteUrl, createServer, handlePOST, stringToJson, handleUnsupportedHttpMethod,
+  IMS_CLI_OAUTH_URL, randomId, authSiteUrl, createServer, cors, handlePOST, stringToJson, handleUnsupportedHttpMethod,
   handleOPTIONS, codeTransform
 } = require('../src/helpers')
 
 const http = require('http')
 const querystring = require('querystring')
+const url = require('url')
 
 jest.mock('http')
 
@@ -166,4 +167,34 @@ test('codeTransform', async () => {
 
   code = { access_token: 'my-access-token' }
   expect(codeTransform(JSON.stringify(code), 'access_token')).toEqual(code)
+})
+
+test('cors', () => {
+  let env, origin
+  const headers = {}
+  const response = {
+    setHeader: (header, value) => {
+      headers[header] = value
+    }
+  }
+
+  const allowOriginHeader = 'Access-Control-Allow-Origin'
+
+  // prod env
+  env = 'prod'
+  cors(response, env)
+  origin = new url.URL(IMS_CLI_OAUTH_URL[env]).origin
+  expect(headers[allowOriginHeader]).toEqual(origin)
+
+  // stage env
+  env = 'stage'
+  cors(response, env)
+  origin = new url.URL(IMS_CLI_OAUTH_URL[env]).origin
+  expect(headers[allowOriginHeader]).toEqual(origin)
+
+  // default env (coverage)
+  env = 'prod'
+  cors(response) // default
+  origin = new url.URL(IMS_CLI_OAUTH_URL[env]).origin
+  expect(headers[allowOriginHeader]).toEqual(origin)
 })
