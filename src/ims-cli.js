@@ -66,7 +66,7 @@ async function canSupport (configData) {
 async function imsLogin (ims, config) {
   return canSupport(config)
     .then(() => {
-      const options = { bare: config[CLI_BARE_OUTPUT] }
+      const options = { bare: config[CLI_BARE_OUTPUT], env: config.env, timeout: config.timeout }
       return login(options)
     })
 }

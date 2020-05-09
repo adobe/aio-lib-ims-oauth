@@ -29,11 +29,11 @@ const AUTH_TIMEOUT_SECONDS = 120
  */
 async function login (options) {
   // eslint-disable-next-line camelcase
-  const { bare = false, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, redirect_uri } = options
+  const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, redirect_uri } = options
   const id = randomId()
   const server = await createServer()
   const serverPort = server.address().port
-  const uri = authSiteUrl({ id, port: serverPort, client_id, scope, redirect_uri })
+  const uri = authSiteUrl({ id, port: serverPort, client_id, scope, redirect_uri }, env)
 
   debug(`Local server created on port ${serverPort}.`)
 
@@ -68,14 +68,14 @@ async function login (options) {
       try {
         switch (request.method) {
           case 'OPTIONS':
-            return handleOPTIONS(request, response)
+            return handleOPTIONS(request, response, env)
           case 'POST': {
-            const result = await handlePOST(request, response, id, cleanup)
+            const result = await handlePOST(request, response, id, cleanup, env)
             resolve(result)
           }
             break
           default:
-            return handleUnsupportedHttpMethod(request, response)
+            return handleUnsupportedHttpMethod(request, response, env)
         }
       } catch (error) {
         if (!bare) {

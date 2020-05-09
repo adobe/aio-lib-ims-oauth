@@ -16,11 +16,12 @@ const crypto = require('crypto')
 const debug = require('debug')('aio-lib-ims-oauth/helpers')
 const querystring = require('querystring')
 
-// overridable via environment variable
-const {
-  IMS_CLI_OAUTH_URL = 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin'
-} = process.env
-debug('IMS_CLI_OAUTH_URL', IMS_CLI_OAUTH_URL)
+const DEFAULT_ENV = 'prod'
+
+const IMS_CLI_OAUTH_URL = {
+  prod: 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin',
+  stage: 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin-stage'
+}
 
 /**
  * Create a local server.
@@ -42,10 +43,11 @@ async function createServer () {
  * Construct the auth site url with these query params.
  *
  * @param {object} queryParams the query params to add to the url
+ * @param {string} [env=prod] the IMS environment
  * @returns {string} the constructed url
  */
-function authSiteUrl (queryParams) {
-  const uri = new url.URL(IMS_CLI_OAUTH_URL)
+function authSiteUrl (queryParams, env = DEFAULT_ENV) {
+  const uri = new url.URL(IMS_CLI_OAUTH_URL[env])
   Object.keys(queryParams).forEach(key => {
     const value = queryParams[key]
     if (value !== undefined && value !== null) {
@@ -81,11 +83,12 @@ function stringToJson (value) {
  * Sets the CORS headers to the response.
  *
  * @param {object} response the Response object
+ * @param {string} [env=prod] the IMS environment
  * @returns {object} return the Response object
  */
-function cors (response) {
+function cors (response, env = DEFAULT_ENV) {
   response.setHeader('Content-Type', 'text/plain')
-  response.setHeader('Access-Control-Allow-Origin', new url.URL(IMS_CLI_OAUTH_URL).origin)
+  response.setHeader('Access-Control-Allow-Origin', new url.URL(IMS_CLI_OAUTH_URL[env]).origin)
   response.setHeader('Access-Control-Request-Method', '*')
   response.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST')
   response.setHeader('Access-Control-Allow-Headers', '*')
@@ -113,9 +116,10 @@ function codeTransform (code, codeType) {
  *
  * @param {object} request the Request object
  * @param {object} response the Response object
+ * @param {string} [env=prod] the IMS environment
  */
-function handleOPTIONS (request, response) {
-  cors(response).end()
+function handleOPTIONS (request, response, env = DEFAULT_ENV) {
+  cors(response, env).end()
 }
 
 /**
@@ -125,11 +129,12 @@ function handleOPTIONS (request, response) {
  * @param {object} response the Response object
  * @param {string} id the secret id to compare to from the request 'state' data
  * @param {Function} done callback function
+ * @param {string} [env=prod] the IMS environment
  * @returns {Promise} resolves to the auth code or access_Token
  */
-async function handlePOST (request, response, id, done) {
+async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
   return new Promise((resolve, reject) => {
-    cors(response)
+    cors(response, env)
     let body = ''
 
     request.on('data', data => {
@@ -161,10 +166,11 @@ async function handlePOST (request, response, id, done) {
  *
  * @param {object} request the Request object
  * @param {object} response the Response object
+ * @param {string} [env=prod] the IMS environment
  */
-function handleUnsupportedHttpMethod (request, response) {
+function handleUnsupportedHttpMethod (request, response, env = DEFAULT_ENV) {
   response.statusCode = 405
-  cors(response).end('Supported HTTP methods are OPTIONS, POST')
+  cors(response, env).end('Supported HTTP methods are OPTIONS, POST')
 }
 
 module.exports = {
