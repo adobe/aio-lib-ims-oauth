@@ -7,7 +7,7 @@ OAuth2 (SUSI) token creation plugin for [`aio-lib-ims`](https://github.com/adobe
 [![Build Status](https://travis-ci.com/adobe/aio-lib-ims-oauth.svg?branch=master)](https://travis-ci.com/adobe/aio-lib-ims-oauth)
 [![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-lib-ims-oauth/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-lib-ims-oauth/)
 [![License](https://img.shields.io/npm/l/@adobe/aio-lib-ims-oauth.svg)](https://github.com/adobe/aio-lib-ims-oauth/blob/master/package.json)
-[![Greenkeeper badge](https://badges.greenkeeper.io/adobe/aio-lib-ims-oauth.svg)](https://greenkeeper.io/)
+
 
 This plugin is intended to be used in conjunction with the [`aio-lib-ims`](https://github.com/adobe/aio-lib-ims) extending that to support browser based 3-legged OAuth2 authentication with IMS commonly known as _SUSI flow_.
 
