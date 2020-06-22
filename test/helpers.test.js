@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const {
-  IMS_CLI_OAUTH_URL, randomId, authSiteUrl, createServer, cors, handlePOST, stringToJson, handleUnsupportedHttpMethod,
+  IMS_CLI_OAUTH_URL, randomId, authSiteUrl, createServer, cors, handleGET, handlePOST, stringToJson, handleUnsupportedHttpMethod,
   handleOPTIONS, codeTransform
 } = require('../src/helpers')
 
@@ -21,10 +21,25 @@ const url = require('url')
 
 jest.mock('http')
 
-const gMockResponse = {
+const createMockResponse = () => ({
   setHeader: jest.fn(),
   end: jest.fn(),
-  statusCode: null
+  statusCode: null,
+  writeHead: jest.fn()
+})
+
+const createRequest = ({ url } = {}) => {
+  const evts = {}
+
+  return {
+    url,
+    on: (event, callback) => {
+      evts[event] = callback
+    },
+    fire: (event, data) => {
+      evts[event] && evts[event](data)
+    }
+  }
 }
 
 beforeAll(() => {
@@ -97,25 +112,31 @@ test('authSiteUrl', () => {
   expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
 })
 
-test('handlePOST', async () => {
+test('handleGET', async () => {
   const id = 'abcd'
   let state = {}
   let queryData = {}
   const done = jest.fn()
   const authCode = 'my-auth-code'
 
-  const createRequest = () => {
-    const evts = {}
+  state = { id }
+  queryData = { code_type: 'auth_code', code: authCode, state: JSON.stringify(state) }
+  const url = `/?${querystring.stringify(queryData)}`
+  const req = createRequest({ url })
 
-    return {
-      on: (event, callback) => {
-        evts[event] = callback
-      },
-      fire: (event, data) => {
-        evts[event] && evts[event](data)
-      }
-    }
-  }
+  // success
+  await expect(handleGET(req, createMockResponse(), id, done)).resolves.toEqual(authCode)
+
+  // failure
+  await expect(handleGET(req, createMockResponse(), 'an-altered-id', done)).rejects.toEqual(new Error(`error code=${authCode}`))
+})
+
+test('handlePOST', async () => {
+  const id = 'abcd'
+  let state = {}
+  let queryData = {}
+  const done = jest.fn()
+  const authCode = 'my-auth-code'
 
   const req = createRequest()
   state = { id }
@@ -125,17 +146,17 @@ test('handlePOST', async () => {
     req.fire('data', querystring.stringify(queryData))
     req.fire('end')
   }, 100)
-  await expect(handlePOST(req, gMockResponse, id, done)).resolves.toEqual(authCode)
+  await expect(handlePOST(req, createMockResponse(), id, done)).resolves.toEqual(authCode)
 
   setTimeout(() => {
     req.fire('data', querystring.stringify(queryData))
     req.fire('end')
   }, 100)
-  await expect(handlePOST(req, gMockResponse, 'an-altered-id', done)).rejects.toEqual(new Error(`error code=${authCode}`))
+  await expect(handlePOST(req, createMockResponse(), 'an-altered-id', done)).rejects.toEqual(new Error(`error code=${authCode}`))
 })
 
 test('handleUnsupportedHttpMethod', async () => {
-  const req = { method: 'GET' }
+  const req = { method: 'PUT' }
   const res = {
     setHeader: jest.fn(),
     end: jest.fn(),
