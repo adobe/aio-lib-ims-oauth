@@ -17,6 +17,7 @@ const debug = require('debug')('aio-lib-ims-oauth/helpers')
 const querystring = require('querystring')
 
 const DEFAULT_ENV = 'prod'
+const PROTOCOL_VERSION = 2
 
 const IMS_CLI_OAUTH_URL = {
   prod: 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin',
@@ -123,6 +124,62 @@ function handleOPTIONS (request, response, env = DEFAULT_ENV) {
 }
 
 /**
+ * GET http method handler.
+ *
+ * @param {object} request the Request object
+ * @param {object} response the Response object
+ * @param {string} id the secret id to compare to from the request 'state' data
+ * @param {Function} done callback function
+ * @param {string} [env=prod] the IMS environment
+ * @returns {Promise} resolves to the auth code or access_Token
+ */
+async function handleGET (request, response, id, done, env = DEFAULT_ENV) {
+  return new Promise((resolve, reject) => {
+    cors(response, env)
+    const requestUrl = request.url.replace(/^.*\?/, '')
+    const queryData = querystring.parse(requestUrl)
+    const state = stringToJson(queryData.state)
+    debug(`state: ${JSON.stringify(state)}`)
+    debug(`queryData: ${JSON.stringify(queryData)}`)
+
+    if (queryData.code && state.id === id) {
+      resolve(codeTransform(queryData.code, queryData.code_type))
+      const signedInUrl = `${IMS_CLI_OAUTH_URL[env]}/signed-in`
+      response.setHeader('Cache-Control', 'private, no-cache')
+      response.writeHead(302, { Location: signedInUrl })
+      response.end()
+    } else {
+      response.statusCode = 400
+      const message = 'An error occurred in the cli.'
+      const errorUrl = `${IMS_CLI_OAUTH_URL[env]}/error?message=${message}`
+      response.setHeader('Cache-Control', 'private, no-cache')
+      response.writeHead(302, { Location: errorUrl })
+      response.end()
+      reject(new Error(`error code=${queryData.code}`))
+    }
+    done()
+  })
+}
+
+/**
+ * Create a JSON response.
+ *
+ * @param {object} params parameters
+ * @param {string} [params.redirect] the redirect url
+ * @param {string} [params.message] the message to display
+ * @param {boolean} [params.error=false] whether the message is an error
+ * @returns {object} the created JSON
+ */
+function createJsonResponse ({ redirect, message, error = false }) {
+  return {
+    protocol_version: PROTOCOL_VERSION,
+    redirect,
+    error,
+    message
+  }
+}
+
+/**
  * POST http method handler.
  *
  * @param {object} request the Request object
@@ -150,10 +207,15 @@ async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
       if (queryData.code && state.id === id) {
         resolve(codeTransform(queryData.code, queryData.code_type))
         response.statusCode = 200
-        response.end('You are now signed in, please close this window.')
+        const redirect = `${IMS_CLI_OAUTH_URL[env]}/signed-in`
+        // send string for backwards compat reasons
+        response.end(JSON.stringify(createJsonResponse({ redirect })))
       } else {
         response.statusCode = 400
-        response.end('An error occurred in the cli.')
+        const message = 'An error occurred in the cli.'
+        const redirect = `${IMS_CLI_OAUTH_URL[env]}/error?message=${message}`
+        // send string for backwards compat reasons
+        response.end(JSON.stringify(createJsonResponse({ redirect, message, error: true })))
         reject(new Error(`error code=${queryData.code}`))
       }
       done()
@@ -170,10 +232,11 @@ async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
  */
 function handleUnsupportedHttpMethod (request, response, env = DEFAULT_ENV) {
   response.statusCode = 405
-  cors(response, env).end('Supported HTTP methods are OPTIONS, POST')
+  cors(response, env).end('Supported HTTP methods are OPTIONS, GET, POST')
 }
 
 module.exports = {
+  handleGET,
   handlePOST,
   handleOPTIONS,
   handleUnsupportedHttpMethod,

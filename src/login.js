@@ -13,7 +13,7 @@ governing permissions and limitations under the License.
 const debug = require('debug')('aio-lib-ims-oauth/login')
 const ora = require('ora')
 const { cli } = require('cli-ux')
-const { randomId, authSiteUrl, createServer, handleOPTIONS, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
+const { randomId, authSiteUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 
 const AUTH_TIMEOUT_SECONDS = 120
 
@@ -26,6 +26,7 @@ const AUTH_TIMEOUT_SECONDS = 120
  * @param {string} [options.client_id] the client id of the OAuth2 integration
  * @param {string} [options.scope] the scope of the OAuth2 integration
  * @param {string} [options.redirect_uri] the redirect uri of the OAuth2 integration
+ * @returns {Promise} resolves to an access token/auth code
  */
 async function login (options) {
   // eslint-disable-next-line camelcase
@@ -71,6 +72,11 @@ async function login (options) {
             return handleOPTIONS(request, response, env)
           case 'POST': {
             const result = await handlePOST(request, response, id, cleanup, env)
+            resolve(result)
+          }
+            break
+          case 'GET': {
+            const result = await handleGET(request, response, id, cleanup, env)
             resolve(result)
           }
             break
