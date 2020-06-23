@@ -30,10 +30,10 @@ The Adobe I/O Runtime function used (currently in testing) is coming soon.
 
 # Config 
 
-Add the `oauth2` context into your `.aio` file in your current working directory (project folder), under `$ims`:
+Add the `oauth2` context into your `.aio` file in your current working directory (project folder), under `ims`:
 ```javascript
 {
-  $ims: {
+  ims: {
     oauth2: {
         redirect_uri: "YOUR_REDIRECT_URI",
         client_id: "YOUR_CLIENT_ID",
