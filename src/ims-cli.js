@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 
 const login = require('./login')
 
-const CLI_BARE_OUTPUT = '$cli.bare-output'
+const CLI_BARE_OUTPUT = 'cli.bare-output'
 
 const isEmpty = (value) => (value === undefined || value === null)
 

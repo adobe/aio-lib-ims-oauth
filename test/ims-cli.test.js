@@ -20,7 +20,7 @@ const gIms = {
 }
 
 const gConfig = {
-  '$cli.bare-output': true
+  'cli.bare-output': true
 }
 
 beforeEach(() => {
@@ -50,7 +50,7 @@ test('imsLogin() interface', async () => {
 
   // config missing a property
   const configMissingProperties = Object.assign({}, gConfig)
-  delete configMissingProperties['$cli.bare-output']
+  delete configMissingProperties['cli.bare-output']
   await expect(plugin.imsLogin(gIms, configMissingProperties)).rejects.toEqual(
-    new Error('OAuth2 for cli not supported due to some missing properties: $cli.bare-output'))
+    new Error('OAuth2 for cli not supported due to some missing properties: cli.bare-output'))
 })
