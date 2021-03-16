@@ -15,8 +15,8 @@ const url = require('url')
 const crypto = require('crypto')
 const debug = require('debug')('aio-lib-ims-oauth/helpers')
 const querystring = require('querystring')
+const { getCliEnv } = require('@adobe/aio-lib-env')
 
-const DEFAULT_ENV = 'prod'
 const PROTOCOL_VERSION = 2
 
 const IMS_CLI_OAUTH_URL = {
@@ -47,7 +47,7 @@ async function createServer () {
  * @param {string} [env=prod] the IMS environment
  * @returns {string} the constructed url
  */
-function authSiteUrl (queryParams, env = DEFAULT_ENV) {
+function authSiteUrl (queryParams, env = getCliEnv()) {
   const uri = new url.URL(IMS_CLI_OAUTH_URL[env])
   Object.keys(queryParams).forEach(key => {
     const value = queryParams[key]
@@ -87,7 +87,7 @@ function stringToJson (value) {
  * @param {string} [env=prod] the IMS environment
  * @returns {object} return the Response object
  */
-function cors (response, env = DEFAULT_ENV) {
+function cors (response, env = getCliEnv()) {
   response.setHeader('Content-Type', 'text/plain')
   response.setHeader('Access-Control-Allow-Origin', new url.URL(IMS_CLI_OAUTH_URL[env]).origin)
   response.setHeader('Access-Control-Request-Method', '*')
@@ -119,7 +119,7 @@ function codeTransform (code, codeType) {
  * @param {object} response the Response object
  * @param {string} [env=prod] the IMS environment
  */
-function handleOPTIONS (request, response, env = DEFAULT_ENV) {
+function handleOPTIONS (request, response, env = getCliEnv()) {
   cors(response, env).end()
 }
 
@@ -133,7 +133,7 @@ function handleOPTIONS (request, response, env = DEFAULT_ENV) {
  * @param {string} [env=prod] the IMS environment
  * @returns {Promise} resolves to the auth code or access_Token
  */
-async function handleGET (request, response, id, done, env = DEFAULT_ENV) {
+async function handleGET (request, response, id, done, env = getCliEnv()) {
   return new Promise((resolve, reject) => {
     cors(response, env)
     const requestUrl = request.url.replace(/^.*\?/, '')
@@ -189,7 +189,7 @@ function createJsonResponse ({ redirect, message, error = false }) {
  * @param {string} [env=prod] the IMS environment
  * @returns {Promise} resolves to the auth code or access_Token
  */
-async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
+async function handlePOST (request, response, id, done, env = getCliEnv()) {
   return new Promise((resolve, reject) => {
     cors(response, env)
     let body = ''
@@ -230,7 +230,7 @@ async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
  * @param {object} response the Response object
  * @param {string} [env=prod] the IMS environment
  */
-function handleUnsupportedHttpMethod (request, response, env = DEFAULT_ENV) {
+function handleUnsupportedHttpMethod (request, response, env = getCliEnv()) {
   response.statusCode = 405
   cors(response, env).end('Supported HTTP methods are OPTIONS, GET, POST')
 }

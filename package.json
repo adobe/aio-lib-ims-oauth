@@ -5,6 +5,7 @@
   "author": "Adobe Inc.",
   "bugs": "https://github.com/adobe/aio-lib-ims-oauth/issues",
   "dependencies": {
+    "@adobe/aio-lib-env": "^1.0.0",
     "cli-ux": "^5.3.3",
     "debug": "^4.1.1",
     "ora": "^4.0.3"

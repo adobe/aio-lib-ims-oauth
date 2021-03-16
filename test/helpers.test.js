@@ -18,7 +18,10 @@ const {
 const http = require('http')
 const querystring = require('querystring')
 const url = require('url')
+const libEnv = require('@adobe/aio-lib-env')
+const { STAGE_ENV, PROD_ENV } = jest.requireActual('@adobe/aio-lib-env')
 
+jest.mock('@adobe/aio-lib-env')
 jest.mock('http')
 
 const createMockResponse = () => ({
@@ -52,6 +55,7 @@ afterAll(() => {
 
 beforeEach(() => {
   jest.restoreAllMocks()
+  libEnv.getCliEnv.mockReturnValue(PROD_ENV) // default
 })
 
 test('exports', () => {
@@ -71,7 +75,7 @@ test('createServer', async () => {
     })
   }
 
-  http.createServer.mockImplementation(callback => {
+  http.createServer.mockImplementation((_) => {
     return server
   })
 
@@ -95,7 +99,7 @@ test('authSiteUrl', () => {
   let queryParams, env, url
 
   // success (prod)
-  env = 'prod'
+  env = PROD_ENV
   url = IMS_CLI_OAUTH_URL[env]
   queryParams = { a: 'b', c: 'd' }
   expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
@@ -106,9 +110,30 @@ test('authSiteUrl', () => {
   expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
 
   // success (stage)
-  env = 'stage'
+  env = STAGE_ENV
   url = IMS_CLI_OAUTH_URL[env]
   queryParams = { a: 'b', c: 'd', e: undefined, f: null }
+  expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
+
+  // env set via global config (stage)
+  env = STAGE_ENV
+  libEnv.getCliEnv.mockReturnValue(env)
+  url = IMS_CLI_OAUTH_URL[env]
+  queryParams = { a: 'b', c: 'd' }
+  expect(authSiteUrl(queryParams)).toEqual(`${url}?a=b&c=d`)
+
+  // env set via global config (prod)
+  env = PROD_ENV
+  libEnv.getCliEnv.mockReturnValue(env)
+  url = IMS_CLI_OAUTH_URL[env]
+  queryParams = { a: 'b', c: 'd', f: undefined }
+  expect(authSiteUrl(queryParams)).toEqual(`${url}?a=b&c=d`)
+
+  // env set via parameter overrides global config
+  env = STAGE_ENV
+  libEnv.getCliEnv.mockReturnValue(PROD_ENV)
+  url = IMS_CLI_OAUTH_URL[env]
+  queryParams = { a: 'b', c: 'd', f: undefined }
   expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
 })
 
@@ -202,19 +227,19 @@ test('cors', () => {
   const allowOriginHeader = 'Access-Control-Allow-Origin'
 
   // prod env
-  env = 'prod'
+  env = PROD_ENV
   cors(response, env)
   origin = new url.URL(IMS_CLI_OAUTH_URL[env]).origin
   expect(headers[allowOriginHeader]).toEqual(origin)
 
   // stage env
-  env = 'stage'
+  env = STAGE_ENV
   cors(response, env)
   origin = new url.URL(IMS_CLI_OAUTH_URL[env]).origin
   expect(headers[allowOriginHeader]).toEqual(origin)
 
   // default env (coverage)
-  env = 'prod'
+  env = PROD_ENV
   cors(response) // default
   origin = new url.URL(IMS_CLI_OAUTH_URL[env]).origin
   expect(headers[allowOriginHeader]).toEqual(origin)
