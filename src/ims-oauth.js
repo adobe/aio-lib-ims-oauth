@@ -11,6 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const login = require('./login')
+const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:ims-oauth', { provider: 'debug' })
 
 /**
  * Checks whether the configuration data is missing any required keys.
@@ -20,6 +21,8 @@ const login = require('./login')
  * @returns {Array} an array of missing keys, if any
  */
 function configMissingKeys (configData) {
+  aioLogger.debug(`configMissingKeys configData: ${JSON.stringify(configData)}`)
+
   if (!configData) {
     return false
   }
@@ -45,6 +48,8 @@ const canSupportSync = (configData) => configMissingKeys(configData).length === 
  * @returns {Promise} resolves to true, if the config data is supported, rejects with an error if it's not
  */
 async function canSupport (configData) {
+  aioLogger.debug(`canSupport configData: ${JSON.stringify(configData)}`)
+
   const missingKeys = configMissingKeys(configData)
   if (missingKeys.length === 0) {
     return Promise.resolve(true)
@@ -62,6 +67,8 @@ async function canSupport (configData) {
  * @returns {Promise<string>} a Promise with the results of the login (access token)
  */
 async function imsLogin (ims, config, force) {
+  aioLogger.debug(`imsLogin config: ${JSON.stringify(config)} force: ${force}`)
+
   return canSupport(config)
     .then(() => login(config))
     .then(authorizationCode => ims.getAccessToken(authorizationCode, config.client_id, config.client_secret, config.scope))

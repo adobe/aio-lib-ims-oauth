@@ -13,10 +13,10 @@ governing permissions and limitations under the License.
 const http = require('http')
 const url = require('url')
 const crypto = require('crypto')
-const debug = require('debug')('aio-lib-ims-oauth/helpers')
+const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:helpers', { provider: 'debug' })
 const querystring = require('querystring')
+const { getCliEnv } = require('@adobe/aio-lib-env')
 
-const DEFAULT_ENV = 'prod'
 const PROTOCOL_VERSION = 2
 
 const IMS_CLI_OAUTH_URL = {
@@ -47,8 +47,10 @@ async function createServer () {
  * @param {string} [env=prod] the IMS environment
  * @returns {string} the constructed url
  */
-function authSiteUrl (queryParams, env = DEFAULT_ENV) {
+function authSiteUrl (queryParams, env = getCliEnv()) {
   const uri = new url.URL(IMS_CLI_OAUTH_URL[env])
+  aioLogger.debug(`authSiteUrl queryParams: ${JSON.stringify(queryParams)} env: ${env} uri: ${uri}`)
+
   Object.keys(queryParams).forEach(key => {
     const value = queryParams[key]
     if (value !== undefined && value !== null) {
@@ -87,9 +89,12 @@ function stringToJson (value) {
  * @param {string} [env=prod] the IMS environment
  * @returns {object} return the Response object
  */
-function cors (response, env = DEFAULT_ENV) {
+function cors (response, env = getCliEnv()) {
+  const origin = new url.URL(IMS_CLI_OAUTH_URL[env]).origin
+  aioLogger.debug(`cors env: ${env} origin: ${origin}`)
+
   response.setHeader('Content-Type', 'text/plain')
-  response.setHeader('Access-Control-Allow-Origin', new url.URL(IMS_CLI_OAUTH_URL[env]).origin)
+  response.setHeader('Access-Control-Allow-Origin', origin)
   response.setHeader('Access-Control-Request-Method', '*')
   response.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST')
   response.setHeader('Access-Control-Allow-Headers', '*')
@@ -105,6 +110,8 @@ function cors (response, env = DEFAULT_ENV) {
  * @returns {string|object} the transformed code (if applicable)
  */
 function codeTransform (code, codeType) {
+  aioLogger.debug(`codeTransform code: ${code} codeType: ${codeType}`)
+
   if (codeType === 'access_token') {
     return JSON.parse(code)
   }
@@ -119,7 +126,8 @@ function codeTransform (code, codeType) {
  * @param {object} response the Response object
  * @param {string} [env=prod] the IMS environment
  */
-function handleOPTIONS (request, response, env = DEFAULT_ENV) {
+function handleOPTIONS (request, response, env = getCliEnv()) {
+  aioLogger.debug(`handleOPTIONS env: ${env}`)
   cors(response, env).end()
 }
 
@@ -133,14 +141,16 @@ function handleOPTIONS (request, response, env = DEFAULT_ENV) {
  * @param {string} [env=prod] the IMS environment
  * @returns {Promise} resolves to the auth code or access_Token
  */
-async function handleGET (request, response, id, done, env = DEFAULT_ENV) {
+async function handleGET (request, response, id, done, env = getCliEnv()) {
+  aioLogger.debug(`handleGET id: ${id} done: ${done} env: ${env}`)
+
   return new Promise((resolve, reject) => {
     cors(response, env)
     const requestUrl = request.url.replace(/^.*\?/, '')
     const queryData = querystring.parse(requestUrl)
     const state = stringToJson(queryData.state)
-    debug(`state: ${JSON.stringify(state)}`)
-    debug(`queryData: ${JSON.stringify(queryData)}`)
+    aioLogger.debug(`state: ${JSON.stringify(state)}`)
+    aioLogger.debug(`queryData: ${JSON.stringify(queryData)}`)
 
     if (queryData.code && state.id === id) {
       resolve(codeTransform(queryData.code, queryData.code_type))
@@ -171,6 +181,8 @@ async function handleGET (request, response, id, done, env = DEFAULT_ENV) {
  * @returns {object} the created JSON
  */
 function createJsonResponse ({ redirect, message, error = false }) {
+  aioLogger.debug(`createJsonResponse redirect: ${redirect} message: ${message} error: ${error}`)
+
   return {
     protocol_version: PROTOCOL_VERSION,
     redirect,
@@ -189,7 +201,9 @@ function createJsonResponse ({ redirect, message, error = false }) {
  * @param {string} [env=prod] the IMS environment
  * @returns {Promise} resolves to the auth code or access_Token
  */
-async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
+async function handlePOST (request, response, id, done, env = getCliEnv()) {
+  aioLogger.debug(`handlePOST id: ${id} done: ${done} env: ${env}`)
+
   return new Promise((resolve, reject) => {
     cors(response, env)
     let body = ''
@@ -201,8 +215,8 @@ async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
     request.on('end', async () => {
       const queryData = querystring.parse(body)
       const state = stringToJson(queryData.state)
-      debug(`state: ${JSON.stringify(state)}`)
-      debug(`queryData: ${JSON.stringify(queryData)}`)
+      aioLogger.debug(`state: ${JSON.stringify(state)}`)
+      aioLogger.debug(`queryData: ${JSON.stringify(queryData)}`)
 
       if (queryData.code && state.id === id) {
         resolve(codeTransform(queryData.code, queryData.code_type))
@@ -230,7 +244,9 @@ async function handlePOST (request, response, id, done, env = DEFAULT_ENV) {
  * @param {object} response the Response object
  * @param {string} [env=prod] the IMS environment
  */
-function handleUnsupportedHttpMethod (request, response, env = DEFAULT_ENV) {
+function handleUnsupportedHttpMethod (request, response, env = getCliEnv()) {
+  aioLogger.debug(`handleUnsupportedHttpMethod env: ${env}`)
+
   response.statusCode = 405
   cors(response, env).end('Supported HTTP methods are OPTIONS, GET, POST')
 }

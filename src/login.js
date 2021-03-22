@@ -10,7 +10,7 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const debug = require('debug')('aio-lib-ims-oauth/login')
+const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:login', { provider: 'debug' })
 const ora = require('ora')
 const { cli } = require('cli-ux')
 const { randomId, authSiteUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
@@ -29,6 +29,8 @@ const AUTH_TIMEOUT_SECONDS = 120
  * @returns {Promise} resolves to an access token/auth code
  */
 async function login (options) {
+  aioLogger.debug(`login options: ${JSON.stringify(options)}`)
+
   // eslint-disable-next-line camelcase
   const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, redirect_uri } = options
   const id = randomId()
@@ -36,7 +38,7 @@ async function login (options) {
   const serverPort = server.address().port
   const uri = authSiteUrl({ id, port: serverPort, client_id, scope, redirect_uri }, env)
 
-  debug(`Local server created on port ${serverPort}.`)
+  aioLogger.debug(`Local server created on port ${serverPort}.`)
 
   return new Promise((resolve, reject) => {
     let spinner
@@ -56,7 +58,7 @@ async function login (options) {
     }, timeout * 1000)
 
     server.on('request', async (request, response) => {
-      debug(`http method: ${request.method}`)
+      aioLogger.debug(`http method: ${request.method}`)
 
       const cleanup = () => {
         clearTimeout(timerId)
