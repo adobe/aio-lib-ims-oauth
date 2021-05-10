@@ -75,6 +75,7 @@ async function imsLogin (ims, config, force) {
 }
 
 module.exports = {
+  canSupport,
   supports: canSupportSync,
   imsLogin
 }
