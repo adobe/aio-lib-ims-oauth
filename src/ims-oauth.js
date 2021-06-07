@@ -63,11 +63,10 @@ async function canSupport (configData) {
  *
  * @param {object} ims the Ims object
  * @param {object} config the configuration data
- * @param {boolean} force force login (don't use cached data)
  * @returns {Promise<string>} a Promise with the results of the login (access token)
  */
-async function imsLogin (ims, config, force) {
-  aioLogger.debug(`imsLogin config: ${JSON.stringify(config)} force: ${force}`)
+async function imsLogin (ims, config) {
+  aioLogger.debug(`imsLogin config: ${JSON.stringify(config)}`)
 
   return canSupport(config)
     .then(() => login(config))
