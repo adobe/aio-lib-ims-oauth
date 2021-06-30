@@ -36,7 +36,6 @@ Add the `oauth2` context into your `.aio` file in your current working directory
   ims: {
     contexts: {
       oauth2: {
-          redirect_uri: "YOUR_REDIRECT_URI",
           client_id: "YOUR_CLIENT_ID",
           client_secret: "YOUR_CLIENT_SECRET",
           scope: "YOUR_IMS_SCOPE"
@@ -47,6 +46,20 @@ Add the `oauth2` context into your `.aio` file in your current working directory
 ```
 The context can be named anything (here `oauth2` is chosen for the context name).
 
+
+# Client ID
+
+The Client ID (called the OAuth2 credential in Developer Console) must allow the Adobe I/O Runtime action's `login-success` path must be configured as a redirect URI pattern of the OAuth2 credential in the Developer Console with the value:
+
+```
+https://aio-login\.adobeioruntime\.net/api/v1/web/default/applogin/login-success
+```
+
+Please note the backslash escaping of the dots in the URLs which is very important because this value must be a valid regular expression.
+
+For example as shown in the following screenshot editing the credential:
+
+![Edit Credential](docs/images/developer-console-edit-credential.png "Developer Console: edit credential")
 
 # Contributing
 Contributions are welcomed! Read the [Contributing Guide](CONTRIBUTING.md) for more information.
