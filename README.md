@@ -49,7 +49,7 @@ The context can be named anything (here `oauth2` is chosen for the context name)
 
 # Client ID
 
-The Client ID (called the OAuth2 credential in Developer Console) must allow the Adobe I/O Runtime action's `login-success` path must be configured as a redirect URI pattern of the OAuth2 credential in the Developer Console with the value:
+The Client ID (called the OAuth2 credential in Developer Console) must allow the Adobe I/O Runtime action's `login-success` path as the redirect URL. To this avail it should be configured as one of the redirect URI patterns of the OAuth2 credential in the Developer Console with the value:
 
 ```
 https://aio-login\.adobeioruntime\.net/api/v1/web/default/applogin/login-success
