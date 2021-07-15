@@ -28,7 +28,7 @@ function configMissingKeys (configData) {
   }
 
   const missingKeys = []
-  const requiredKeys = ['redirect_uri', 'client_id', 'client_secret', 'scope']
+  const requiredKeys = ['client_id', 'client_secret', 'scope']
 
   requiredKeys.forEach(key => {
     if (!configData[key]) {

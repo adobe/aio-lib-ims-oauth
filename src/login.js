@@ -13,9 +13,10 @@ governing permissions and limitations under the License.
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:login', { provider: 'debug' })
 const ora = require('ora')
 const { cli } = require('cli-ux')
-const { randomId, authSiteUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
+const { randomId, authSiteUrl, IMS_CLI_OAUTH_URL, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 
 const AUTH_TIMEOUT_SECONDS = 120
+const LOGIN_SUCCESS = '/login-success'
 
 /**
  * Gets the access token / auth code for a signed in user.
@@ -32,7 +33,8 @@ async function login (options) {
   aioLogger.debug(`login options: ${JSON.stringify(options)}`)
 
   // eslint-disable-next-line camelcase
-  const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, redirect_uri } = options
+  const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope } = options
+  const redirect_uri = `${IMS_CLI_OAUTH_URL[env]}${LOGIN_SUCCESS}` // eslint-disable-line camelcase
   const id = randomId()
   const server = await createServer()
   const serverPort = server.address().port
