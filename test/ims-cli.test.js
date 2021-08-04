@@ -51,6 +51,6 @@ test('imsLogin() interface', async () => {
   // config missing a property
   const configMissingProperties = Object.assign({}, gConfig)
   delete configMissingProperties['cli.bare-output']
-  await expect(plugin.imsLogin(gIms, configMissingProperties)).rejects.toEqual(
-    new Error('OAuth2 for cli not supported due to some missing properties: cli.bare-output'))
+  await expect(plugin.imsLogin(gIms, configMissingProperties)).rejects.toThrow(
+    '[IMSOAuthSDK:MISSING_PROPERTIES] OAuth2 not supported due to some missing properties: cli.bare-output')
 })

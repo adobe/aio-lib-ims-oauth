@@ -190,9 +190,9 @@ test('timeout', async () => {
   })
 
   // Timeout not bare (default)
-  await expect(login({ ...gConfig, timeout: myTimeout })).rejects.toEqual(new Error(`Timed out after ${myTimeout} seconds.`))
+  await expect(login({ ...gConfig, timeout: myTimeout })).rejects.toThrow(`[IMSOAuthSDK:TIMEOUT] Timed out after ${myTimeout} seconds.`)
   // Timeout bare
-  await expect(login({ ...gConfig, timeout: myTimeout, bare: true })).rejects.toEqual(new Error(`Timed out after ${myTimeout} seconds.`))
+  await expect(login({ ...gConfig, timeout: myTimeout, bare: true })).rejects.toThrow(`[IMSOAuthSDK:TIMEOUT] Timed out after ${myTimeout} seconds.`)
 })
 
 test('unsupported http method', () => {

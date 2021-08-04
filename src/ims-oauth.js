@@ -12,6 +12,7 @@ governing permissions and limitations under the License.
 
 const login = require('./login')
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:ims-oauth', { provider: 'debug' })
+const { codes: errors } = require('./errors')
 
 /**
  * Checks whether the configuration data is missing any required keys.
@@ -54,7 +55,7 @@ async function canSupport (configData) {
   if (missingKeys.length === 0) {
     return Promise.resolve(true)
   } else {
-    return Promise.reject(new Error(`OAuth2 not supported due to some missing properties: ${missingKeys}`))
+    return Promise.reject(new errors.MISSING_PROPERTIES({ messageValues: missingKeys.join(',') }))
   }
 }
 

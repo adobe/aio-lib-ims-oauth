@@ -153,7 +153,7 @@ test('handleGET', async () => {
   await expect(handleGET(req, createMockResponse(), id, done)).resolves.toEqual(authCode)
 
   // failure
-  await expect(handleGET(req, createMockResponse(), 'an-altered-id', done)).rejects.toEqual(new Error(`error code=${authCode}`))
+  await expect(handleGET(req, createMockResponse(), 'an-altered-id', done)).rejects.toThrow(`[IMSOAuthSDK:HTTP_ERROR] error code=${authCode}`)
 })
 
 test('handlePOST', async () => {
@@ -177,7 +177,7 @@ test('handlePOST', async () => {
     req.fire('data', querystring.stringify(queryData))
     req.fire('end')
   }, 100)
-  await expect(handlePOST(req, createMockResponse(), 'an-altered-id', done)).rejects.toEqual(new Error(`error code=${authCode}`))
+  await expect(handlePOST(req, createMockResponse(), 'an-altered-id', done)).rejects.toThrow(`[IMSOAuthSDK:HTTP_ERROR] error code=${authCode}`)
 })
 
 test('handleUnsupportedHttpMethod', async () => {
