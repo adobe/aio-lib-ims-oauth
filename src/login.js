@@ -14,6 +14,7 @@ const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oau
 const ora = require('ora')
 const { cli } = require('cli-ux')
 const { randomId, authSiteUrl, IMS_CLI_OAUTH_URL, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
+const { codes: errors } = require('./errors')
 
 const AUTH_TIMEOUT_SECONDS = 120
 const LOGIN_SUCCESS = '/login-success'
@@ -53,7 +54,7 @@ async function login (options) {
     cli.open(uri)
 
     const timerId = setTimeout(() => {
-      reject(new Error(`Timed out after ${timeout} seconds.`))
+      reject(new errors.TIMEOUT({ messageValues: timeout }))
       if (!bare) {
         spinner.stop()
       }

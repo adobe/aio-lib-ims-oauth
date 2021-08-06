@@ -59,5 +59,5 @@ test('imsLogin() interface', async () => {
   // config missing a property
   const configMissingProperties = Object.assign({}, gConfig)
   delete configMissingProperties.client_id
-  await expect(plugin.imsLogin(gIms, configMissingProperties)).rejects.toEqual(new Error('OAuth2 not supported due to some missing properties: client_id'))
+  await expect(plugin.imsLogin(gIms, configMissingProperties)).rejects.toThrow('[IMSOAuthSDK:MISSING_PROPERTIES] OAuth2 not supported due to some missing properties: client_id')
 })

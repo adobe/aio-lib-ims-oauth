@@ -16,6 +16,7 @@ const crypto = require('crypto')
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:helpers', { provider: 'debug' })
 const querystring = require('querystring')
 const { getCliEnv } = require('@adobe/aio-lib-env')
+const { codes: errors } = require('./errors')
 
 const PROTOCOL_VERSION = 2
 
@@ -165,7 +166,7 @@ async function handleGET (request, response, id, done, env = getCliEnv()) {
       response.setHeader('Cache-Control', 'private, no-cache')
       response.writeHead(302, { Location: errorUrl })
       response.end()
-      reject(new Error(`error code=${queryData.code}`))
+      reject(new errors.HTTP_ERROR({ messageValues: queryData.code }))
     }
     done()
   })
@@ -230,7 +231,7 @@ async function handlePOST (request, response, id, done, env = getCliEnv()) {
         const redirect = `${IMS_CLI_OAUTH_URL[env]}/error?message=${message}`
         // send string for backwards compat reasons
         response.end(JSON.stringify(createJsonResponse({ redirect, message, error: true })))
-        reject(new Error(`error code=${queryData.code}`))
+        reject(new errors.HTTP_ERROR({ messageValues: queryData.code }))
       }
       done()
     })
