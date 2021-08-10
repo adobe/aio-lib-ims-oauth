@@ -1,7 +1,7 @@
 {
   "name": "@adobe/aio-lib-ims-oauth",
   "description": "OAuth2 (SUSI) token creation plugin for @adobe/aio-lib-ims",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "author": "Adobe Inc.",
   "bugs": "https://github.com/adobe/aio-lib-ims-oauth/issues",
   "dependencies": {
