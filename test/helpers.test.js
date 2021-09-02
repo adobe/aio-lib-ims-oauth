@@ -125,13 +125,13 @@ test('getImsCliOAuthUrl', () => {
   env = STAGE_ENV
   libEnv.getCliEnv.mockReturnValue(env)
   url = IMS_CLI_OAUTH_URL[env]
-  expect(getImsCliOAuthUrl(env)).toEqual(url)
+  expect(getImsCliOAuthUrl()).toEqual(url)
 
   // env set via global config (prod)
   env = PROD_ENV
   libEnv.getCliEnv.mockReturnValue(env)
   url = IMS_CLI_OAUTH_URL[env]
-  expect(getImsCliOAuthUrl(env)).toEqual(url)
+  expect(getImsCliOAuthUrl()).toEqual(url)
 
   // env set via parameter overrides global config
   env = STAGE_ENV
