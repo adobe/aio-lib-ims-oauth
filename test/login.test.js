@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const helpers = require('../src/helpers')
-const { authSiteUrl } = jest.requireActual('../src/helpers')
+const { authSiteUrl, getImsCliOAuthUrl } = jest.requireActual('../src/helpers')
 const { cli } = require('cli-ux')
 const ora = require('ora')
 const login = require('../src/login')
@@ -79,8 +79,9 @@ function createMockServer (request, response, port = 8000, delayTriggerMs = 100)
 }
 
 beforeAll(() => {
-  // unmock authSiteUrl from helpers
+  // unmock authSiteUrl, getImsCliOAuthUrl from helpers
   helpers.authSiteUrl.mockImplementation(authSiteUrl)
+  helpers.getImsCliOAuthUrl.mockImplementation(getImsCliOAuthUrl)
   jest.useRealTimers()
 })
 

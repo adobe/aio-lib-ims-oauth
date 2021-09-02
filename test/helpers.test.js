@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const {
-  IMS_CLI_OAUTH_URL, randomId, authSiteUrl, createServer, cors, handleGET, handlePOST, stringToJson, handleUnsupportedHttpMethod,
+  IMS_CLI_OAUTH_URL, randomId, authSiteUrl, createServer, getImsCliOAuthUrl, cors, handleGET, handlePOST, stringToJson, handleUnsupportedHttpMethod,
   handleOPTIONS, codeTransform
 } = require('../src/helpers')
 
@@ -59,9 +59,18 @@ beforeEach(() => {
 })
 
 test('exports', () => {
+  expect(typeof IMS_CLI_OAUTH_URL).toEqual('object')
   expect(typeof createServer).toEqual('function')
   expect(typeof randomId).toEqual('function')
   expect(typeof authSiteUrl).toEqual('function')
+  expect(typeof getImsCliOAuthUrl).toEqual('function')
+  expect(typeof cors).toEqual('function')
+  expect(typeof handleGET).toEqual('function')
+  expect(typeof handlePOST).toEqual('function')
+  expect(typeof stringToJson).toEqual('function')
+  expect(typeof handleUnsupportedHttpMethod).toEqual('function')
+  expect(typeof handleOPTIONS).toEqual('function')
+  expect(typeof codeTransform).toEqual('function')
 })
 
 test('createServer', async () => {
@@ -93,6 +102,42 @@ test('randomId', () => {
 
   expect(r1).not.toEqual(r2)
   expect(r1.length).toEqual(8)
+})
+
+test('getImsCliOAuthUrl', () => {
+  let env, url
+
+  // success (prod)
+  env = PROD_ENV
+  url = IMS_CLI_OAUTH_URL[env]
+  expect(getImsCliOAuthUrl(env)).toEqual(url)
+
+  // coverage (default env)
+  env = undefined
+  expect(getImsCliOAuthUrl(env)).toEqual(url)
+
+  // success (stage)
+  env = STAGE_ENV
+  url = IMS_CLI_OAUTH_URL[env]
+  expect(getImsCliOAuthUrl(env)).toEqual(url)
+
+  // env set via global config (stage)
+  env = STAGE_ENV
+  libEnv.getCliEnv.mockReturnValue(env)
+  url = IMS_CLI_OAUTH_URL[env]
+  expect(getImsCliOAuthUrl(env)).toEqual(url)
+
+  // env set via global config (prod)
+  env = PROD_ENV
+  libEnv.getCliEnv.mockReturnValue(env)
+  url = IMS_CLI_OAUTH_URL[env]
+  expect(getImsCliOAuthUrl(env)).toEqual(url)
+
+  // env set via parameter overrides global config
+  env = STAGE_ENV
+  libEnv.getCliEnv.mockReturnValue(PROD_ENV)
+  url = IMS_CLI_OAUTH_URL[env]
+  expect(getImsCliOAuthUrl(env)).toEqual(url)
 })
 
 test('authSiteUrl', () => {
