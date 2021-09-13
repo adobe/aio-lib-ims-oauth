@@ -9,7 +9,7 @@
     "@adobe/aio-lib-core-logging": "^1.2.0",
     "@adobe/aio-lib-env": "^1.0.0",
     "cli-ux": "^5.3.3",
-    "ora": "^4.0.3"
+    "ora": "^6.0.0"
   },
   "peerDependencies": {
     "@adobe/aio-lib-ims": "^4.0.0"
