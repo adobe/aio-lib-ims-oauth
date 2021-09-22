@@ -4,7 +4,7 @@ OAuth2 (SUSI) token creation plugin for [`aio-lib-ims`](https://github.com/adobe
 
 [![Version](https://img.shields.io/npm/v/@adobe/aio-lib-ims-oauth.svg)](https://npmjs.org/package/@adobe/aio-lib-ims-oauth)
 [![Downloads/week](https://img.shields.io/npm/dw/@adobe/aio-lib-ims-oauth.svg)](https://npmjs.org/package/@adobe/aio-lib-ims-oauth)
-[![Build Status](https://travis-ci.com/adobe/aio-lib-ims-oauth.svg?branch=master)](https://travis-ci.com/adobe/aio-lib-ims-oauth)
+[![Node.js CI](https://github.com/adobe/aio-lib-ims-oauth/actions/workflows/node.js.yml/badge.svg)](https://github.com/adobe/aio-lib-ims-oauth/actions/workflows/node.js.yml)
 [![Codecov Coverage](https://img.shields.io/codecov/c/github/adobe/aio-lib-ims-oauth/master.svg?style=flat-square)](https://codecov.io/gh/adobe/aio-lib-ims-oauth/)
 [![License](https://img.shields.io/npm/l/@adobe/aio-lib-ims-oauth.svg)](https://github.com/adobe/aio-lib-ims-oauth/blob/master/package.json)
 
