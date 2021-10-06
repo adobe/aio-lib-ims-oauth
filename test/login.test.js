@@ -11,9 +11,11 @@ governing permissions and limitations under the License.
 */
 
 const helpers = require('../src/helpers')
+const { authSiteUrl, getImsCliOAuthUrl } = jest.requireActual('../src/helpers')
 const { cli } = require('cli-ux')
 const ora = require('ora')
 const login = require('../src/login')
+const url = require('url')
 
 // //////////////////////////////////////////
 
@@ -77,6 +79,9 @@ function createMockServer (request, response, port = 8000, delayTriggerMs = 100)
 }
 
 beforeAll(() => {
+  // unmock authSiteUrl, getImsCliOAuthUrl from helpers
+  helpers.authSiteUrl.mockImplementation(authSiteUrl)
+  helpers.getImsCliOAuthUrl.mockImplementation(getImsCliOAuthUrl)
   jest.useRealTimers()
 })
 
@@ -90,6 +95,24 @@ beforeEach(() => {
 
 test('exports', () => {
   expect(typeof login).toEqual('function')
+})
+
+test('test the url returned by cli.open, no query params should contain undefined', async () => {
+  const request = { method: 'GET' }
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer(request, createMockResponse()))
+    })
+  })
+
+  await login(gConfig)
+  expect(cli.open.mock.calls.length).toEqual(1)
+
+  // ACNA-1315 - test the url returned by cli.open, no query param values should contain undefined
+  const cliOpenCallUrl = new url.URL(cli.open.mock.calls[0][0])
+  for (const [, value] of cliOpenCallUrl.searchParams.entries()) {
+    expect(value).not.toMatch('undefined')
+  }
 })
 
 test('login (POST)', async () => {

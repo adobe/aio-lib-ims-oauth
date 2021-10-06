@@ -42,6 +42,16 @@ async function createServer () {
 }
 
 /**
+ * Get the aio-cli's IMS OAuth URL
+ *
+ * @param {string} [env=prod] the IMS environment
+ * @returns {string} the url
+ */
+function getImsCliOAuthUrl (env = getCliEnv()) {
+  return IMS_CLI_OAUTH_URL[env]
+}
+
+/**
  * Construct the auth site url with these query params.
  *
  * @param {object} queryParams the query params to add to the url
@@ -49,7 +59,7 @@ async function createServer () {
  * @returns {string} the constructed url
  */
 function authSiteUrl (queryParams, env = getCliEnv()) {
-  const uri = new url.URL(IMS_CLI_OAUTH_URL[env])
+  const uri = new url.URL(getImsCliOAuthUrl(env))
   aioLogger.debug(`authSiteUrl queryParams: ${JSON.stringify(queryParams)} env: ${env} uri: ${uri}`)
 
   Object.keys(queryParams).forEach(key => {
@@ -263,5 +273,6 @@ module.exports = {
   randomId,
   authSiteUrl,
   createServer,
-  IMS_CLI_OAUTH_URL
+  IMS_CLI_OAUTH_URL,
+  getImsCliOAuthUrl
 }
