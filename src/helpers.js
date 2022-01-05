@@ -22,7 +22,7 @@ const PROTOCOL_VERSION = 2
 
 const IMS_CLI_OAUTH_URL = {
   prod: 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin',
-  stage: 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin-stage'
+  stage: 'https://aio-login-stage.adobeioruntime.net/api/v1/web/default/applogin'
 }
 
 /**
