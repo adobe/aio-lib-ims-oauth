@@ -22,7 +22,7 @@ const LOGIN_SUCCESS = '/login-success'
 /**
  * Gets the access token / auth code for a signed in user.
  *
- * @param {object} options the optional configuration
+ * @param {object} options the optional configuration, { bare, env, timeout, client_id, scope, autoOpen }
  * @param {number} [options.bare=false] set to true to not have any progress text
  * @param {number} [options.timeout] the timeout in seconds
  * @param {string} [options.client_id] the client id of the OAuth2 integration
@@ -34,7 +34,7 @@ async function login (options) {
   aioLogger.debug(`login options: ${JSON.stringify(options)}`)
 
   // eslint-disable-next-line camelcase
-  const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope } = options
+  const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, autoOpen = true } = options
   const redirect_uri = `${getImsCliOAuthUrl(env)}${LOGIN_SUCCESS}` // eslint-disable-line camelcase
   const id = randomId()
   const server = await createServer()
@@ -51,7 +51,9 @@ async function login (options) {
       cli.url(uri, uri)
       spinner = ora('Logging in').start()
     }
-    cli.open(uri)
+    if (autoOpen) {
+      cli.open(uri)
+    }
 
     const timerId = setTimeout(() => {
       reject(new errors.TIMEOUT({ messageValues: timeout }))
