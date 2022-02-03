@@ -185,6 +185,12 @@ test('login (GET)', async () => {
   await expect(login({ ...gConfig, bare: true })).resolves.toEqual(myAccessToken)
 })
 
+test('open:false', async () => {
+  const myAccessToken = { access_token: { token: 'my-access-token', expiry: 123 } }
+  await expect(login({ ...gConfig, open: false })).resolves.toEqual(myAccessToken)
+  expect(cli.open.mock.calls.length).toEqual(0)
+})
+
 test('error', async () => {
   const request = { method: 'POST' }
   const myAuthCode = 'my-auth-code'

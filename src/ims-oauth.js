@@ -24,19 +24,17 @@ const { codes: errors } = require('./errors')
 function configMissingKeys (configData) {
   aioLogger.debug(`configMissingKeys configData: ${JSON.stringify(configData)}`)
 
-  if (!configData) {
-    return false
-  }
-
   const missingKeys = []
   const requiredKeys = ['client_id', 'client_secret', 'scope']
 
+  if (!configData) {
+    return requiredKeys
+  }
   requiredKeys.forEach(key => {
     if (!configData[key]) {
       missingKeys.push(key)
     }
   })
-
   return missingKeys
 }
 
