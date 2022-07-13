@@ -39,6 +39,7 @@ async function login (options) {
   const id = randomId()
   const server = await createServer()
   const serverPort = server.address().port
+  // eslint-disable-next-line camelcase
   const uri = authSiteUrl({ id, port: serverPort, client_id, scope, redirect_uri }, env)
 
   aioLogger.debug(`Local server created on port ${serverPort}.`)
