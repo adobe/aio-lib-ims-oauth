@@ -258,3 +258,18 @@ test('OPTIONS http method', () => {
     login(gConfig)
   })
 })
+
+test('test browser config is passed to open', async () => {
+  const request = { method: 'GET' }
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer(request, createMockResponse()))
+    })
+  })
+
+  await login({ browser: 'Firefox', ...gConfig })
+  expect(cli.open.mock.calls.length).toEqual(1)
+
+  const openOptions = cli.open.mock.calls[0][1]
+  expect(openOptions.app).toEqual('Firefox')
+})

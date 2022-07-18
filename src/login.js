@@ -34,7 +34,7 @@ async function login (options) {
   aioLogger.debug(`login options: ${JSON.stringify(options)}`)
 
   // eslint-disable-next-line camelcase
-  const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, open = true } = options
+  const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, open = true, browser: app } = options
   const redirect_uri = `${getImsCliOAuthUrl(env)}${LOGIN_SUCCESS}` // eslint-disable-line camelcase
   const id = randomId()
   const server = await createServer()
@@ -53,7 +53,9 @@ async function login (options) {
       spinner = ora('Waiting for browser login').start()
     }
     if (open) {
-      cli.open(uri)
+      cli.open(uri, {
+        app
+      })
     }
 
     const timerId = setTimeout(() => {
