@@ -12,14 +12,13 @@ governing permissions and limitations under the License.
 
 const helpers = require('../src/helpers')
 const { authSiteUrl, getImsCliOAuthUrl } = jest.requireActual('../src/helpers')
-const { cli } = require('cli-ux')
+const { CliUx: cli } = require('@oclif/core')
 const ora = require('ora')
 const login = require('../src/login')
 const url = require('url')
 
 // //////////////////////////////////////////
 
-jest.mock('cli-ux')
 jest.mock('../src/helpers')
 jest.mock('ora')
 
@@ -45,6 +44,7 @@ const gConfig = {
 jest.spyOn(console, 'log').mockImplementation(() => {})
 // not sure why this method is not mocked by jest, so we manually do it
 cli.open = jest.fn()
+cli.url = jest.fn()
 
 const createMockResponse = () => ({
   setHeader: jest.fn(),
