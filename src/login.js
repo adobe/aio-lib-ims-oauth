@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:login', { provider: 'debug' })
 const ora = require('ora')
-const { CliUx: cli } = require('@oclif/core')
+const { CliUx } = require('@oclif/core')
 const { randomId, authSiteUrl, getImsCliOAuthUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 const { codes: errors } = require('./errors')
 
@@ -49,11 +49,11 @@ async function login (options) {
 
     if (!bare) {
       console.log('Visit this url to log in: ')
-      cli.url(uri, uri)
+      CliUx.ux.url(uri, uri)
       spinner = ora('Waiting for browser login').start()
     }
     if (open) {
-      cli.open(uri, {
+      CliUx.ux.open(uri, {
         app
       })
     }

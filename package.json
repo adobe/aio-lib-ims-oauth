@@ -9,7 +9,6 @@
     "@adobe/aio-lib-core-logging": "^2.0.0",
     "@adobe/aio-lib-env": "^2.0.0",
     "@oclif/core": "^1.14.2",
-    "cli-ux": "^5.3.3",
     "ora": "^4.0.3"
   },
   "peerDependencies": {
@@ -46,7 +45,7 @@
   "scripts": {
     "pretest": "eslint .",
     "test": "npm run unit-tests",
-    "unit-tests": "jest --config test/jest.config.js ---ci -w=2",
+    "unit-tests": "jest --config test/jest.config.js ---ci -w=2 --detectOpenHandles",
     "version": "git add README.md"
   }
 }
