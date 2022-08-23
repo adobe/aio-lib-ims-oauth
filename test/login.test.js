@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 const helpers = require('../src/helpers')
 const { authSiteUrl, getImsCliOAuthUrl } = jest.requireActual('../src/helpers')
-const { CliUx: cli } = require('@oclif/core')
+const { CliUx } = require('@oclif/core')
 const ora = require('ora')
 const login = require('../src/login')
 const url = require('url')
@@ -21,6 +21,14 @@ const url = require('url')
 
 jest.mock('../src/helpers')
 jest.mock('ora')
+jest.mock('@oclif/core', () => ({
+  CliUx: {
+    ux: {
+      open: jest.fn(),
+      url: jest.fn()
+    }
+  }
+}))
 
 ora.mockImplementation(() => {
   return {
@@ -42,10 +50,6 @@ const gConfig = {
 }
 
 jest.spyOn(console, 'log').mockImplementation(() => {})
-// not sure why this method is not mocked by jest, so we manually do it
-cli.open = jest.fn()
-cli.url = jest.fn()
-
 const createMockResponse = () => ({
   setHeader: jest.fn(),
   end: jest.fn(),
@@ -105,11 +109,14 @@ test('test the url returned by cli.open, no query params should contain undefine
     })
   })
 
+  // to handle timer cleanup duties
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
+
   await login(gConfig)
-  expect(cli.open.mock.calls.length).toEqual(1)
+  expect(CliUx.ux.open.mock.calls.length).toEqual(1)
 
   // ACNA-1315 - test the url returned by cli.open, no query param values should contain undefined
-  const cliOpenCallUrl = new url.URL(cli.open.mock.calls[0][0])
+  const cliOpenCallUrl = new url.URL(CliUx.ux.open.mock.calls[0][0])
   for (const [, value] of cliOpenCallUrl.searchParams.entries()) {
     expect(value).not.toMatch('undefined')
   }
@@ -128,6 +135,9 @@ test('login (POST)', async () => {
     })
   })
 
+  // to handle timer cleanup duties
+  helpers.handlePOST.mockImplementation((_req, _res, _id, done) => done())
+
   const createPostResponse = (responseValue) => {
     return async function (_req, _resp, _id, done) {
       done()
@@ -138,8 +148,8 @@ test('login (POST)', async () => {
   // Success (got auth code)
   helpers.handlePOST.mockImplementation(await createPostResponse(myAuthCode))
   await expect(login(gConfig)).resolves.toEqual(myAuthCode)
-  expect(cli.url.mock.calls.length).toEqual(1)
-  expect(cli.open.mock.calls.length).toEqual(1)
+  expect(CliUx.ux.url.mock.calls.length).toEqual(1)
+  expect(CliUx.ux.open.mock.calls.length).toEqual(1)
 
   // Success (got access token)
   helpers.handlePOST.mockImplementation(await createPostResponse(myAccessToken))
@@ -163,6 +173,9 @@ test('login (GET)', async () => {
     })
   })
 
+  // to handle timer cleanup duties
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
+
   const createGetResponse = (responseValue) => {
     return async function (_req, _resp, _id, done) {
       done()
@@ -173,8 +186,8 @@ test('login (GET)', async () => {
   // Success (got auth code)
   helpers.handleGET.mockImplementation(await createGetResponse(myAuthCode))
   await expect(login(gConfig)).resolves.toEqual(myAuthCode)
-  expect(cli.url.mock.calls.length).toEqual(1)
-  expect(cli.open.mock.calls.length).toEqual(1)
+  expect(CliUx.ux.url.mock.calls.length).toEqual(1)
+  expect(CliUx.ux.open.mock.calls.length).toEqual(1)
 
   // Success (got access token)
   helpers.handleGET.mockImplementation(await createGetResponse(myAccessToken))
@@ -188,7 +201,7 @@ test('login (GET)', async () => {
 test('open:false', async () => {
   const myAccessToken = { access_token: { token: 'my-access-token', expiry: 123 } }
   await expect(login({ ...gConfig, open: false })).resolves.toEqual(myAccessToken)
-  expect(cli.open.mock.calls.length).toEqual(0)
+  expect(CliUx.ux.open.mock.calls.length).toEqual(0)
 })
 
 test('error', async () => {
@@ -211,10 +224,12 @@ test('error', async () => {
 
 test('timeout', async () => {
   const myTimeout = 1
+  const mockServer = createMockServer({}, createMockResponse(), null, 10000)
+  mockServer.on = jest.fn() // prevent timer leaks
 
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
-      resolve(createMockServer({}, createMockResponse(), null, 10000))
+      resolve(mockServer)
     })
   })
 
@@ -234,9 +249,10 @@ test('unsupported http method', () => {
   })
 
   return new Promise(resolve => {
-    helpers.handleUnsupportedHttpMethod.mockImplementation((req, res) => {
+    helpers.handleUnsupportedHttpMethod.mockImplementation((req, _res, done) => {
       expect(req.method).toEqual('PUT')
       resolve()
+      done() // to handle timer cleanup duties
     })
     login(gConfig)
   })
@@ -251,9 +267,10 @@ test('OPTIONS http method', () => {
   })
 
   return new Promise(resolve => {
-    helpers.handleOPTIONS.mockImplementation((req, res) => {
+    helpers.handleOPTIONS.mockImplementation((req, _res, done) => {
       expect(req.method).toEqual('OPTIONS')
       resolve()
+      done() // to handle timer cleanup duties
     })
     login(gConfig)
   })
@@ -266,10 +283,12 @@ test('test browser config is passed to open', async () => {
       resolve(createMockServer(request, createMockResponse()))
     })
   })
+  // to handle timer cleanup duties
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
 
   await login({ browser: 'Firefox', ...gConfig })
-  expect(cli.open.mock.calls.length).toEqual(1)
+  expect(CliUx.ux.open.mock.calls.length).toEqual(1)
 
-  const openOptions = cli.open.mock.calls[0][1]
+  const openOptions = CliUx.ux.open.mock.calls[0][1]
   expect(openOptions.app).toEqual('Firefox')
 })

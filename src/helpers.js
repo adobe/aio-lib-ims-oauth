@@ -133,13 +133,15 @@ function codeTransform (code, codeType) {
 /**
  * OPTIONS http method handler
  *
- * @param {object} request the Request object
+ * @param {object} _request the Request object
  * @param {object} response the Response object
+ * @param {Function} done callback function
  * @param {string} [env=prod] the IMS environment
  */
-function handleOPTIONS (request, response, env = getCliEnv()) {
+function handleOPTIONS (_request, response, done, env = getCliEnv()) {
   aioLogger.debug(`handleOPTIONS env: ${env}`)
   cors(response, env).end()
+  done()
 }
 
 /**
@@ -251,15 +253,17 @@ async function handlePOST (request, response, id, done, env = getCliEnv()) {
 /**
  * Unsupported HTTP method handler.
  *
- * @param {object} request the Request object
+ * @param {object} _request the Request object
  * @param {object} response the Response object
+ * @param {Function} done callback function
  * @param {string} [env=prod] the IMS environment
  */
-function handleUnsupportedHttpMethod (request, response, env = getCliEnv()) {
+function handleUnsupportedHttpMethod (_request, response, done, env = getCliEnv()) {
   aioLogger.debug(`handleUnsupportedHttpMethod env: ${env}`)
 
   response.statusCode = 405
   cors(response, env).end('Supported HTTP methods are OPTIONS, GET, POST')
+  done()
 }
 
 module.exports = {

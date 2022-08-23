@@ -232,10 +232,12 @@ test('handleUnsupportedHttpMethod', async () => {
     end: jest.fn(),
     statusCode: null
   }
+  const done = jest.fn()
 
-  handleUnsupportedHttpMethod(req, res)
+  handleUnsupportedHttpMethod(req, res, done)
   expect(res.statusCode).toEqual(405)
   expect(res.end).toHaveBeenCalled()
+  expect(done).toHaveBeenCalledTimes(1)
 })
 
 test('handleOPTIONS', async () => {
@@ -245,9 +247,11 @@ test('handleOPTIONS', async () => {
     end: jest.fn(),
     statusCode: null
   }
+  const done = jest.fn()
 
-  handleOPTIONS(req, res)
+  handleOPTIONS(req, res, done)
   expect(res.end).toHaveBeenCalled()
+  expect(done).toHaveBeenCalledTimes(1)
 })
 
 test('codeTransform', async () => {
