@@ -109,6 +109,9 @@ test('test the url returned by cli.open, no query params should contain undefine
     })
   })
 
+  // to handle timer cleanup duties
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
+
   await login(gConfig)
   expect(CliUx.ux.open.mock.calls.length).toEqual(1)
 
@@ -131,6 +134,9 @@ test('login (POST)', async () => {
       resolve(createMockServer(request, createMockResponse()))
     })
   })
+
+  // to handle timer cleanup duties
+  helpers.handlePOST.mockImplementation((_req, _res, _id, done) => done())
 
   const createPostResponse = (responseValue) => {
     return async function (_req, _resp, _id, done) {
@@ -166,6 +172,9 @@ test('login (GET)', async () => {
       resolve(createMockServer(request, createMockResponse()))
     })
   })
+
+  // to handle timer cleanup duties
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
 
   const createGetResponse = (responseValue) => {
     return async function (_req, _resp, _id, done) {
@@ -215,10 +224,12 @@ test('error', async () => {
 
 test('timeout', async () => {
   const myTimeout = 1
+  const mockServer = createMockServer({}, createMockResponse(), null, 10000)
+  mockServer.on = jest.fn() // prevent timer leaks
 
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
-      resolve(createMockServer({}, createMockResponse(), null, 10000))
+      resolve(mockServer)
     })
   })
 
@@ -238,9 +249,10 @@ test('unsupported http method', () => {
   })
 
   return new Promise(resolve => {
-    helpers.handleUnsupportedHttpMethod.mockImplementation((req, res) => {
+    helpers.handleUnsupportedHttpMethod.mockImplementation((req, _res, done) => {
       expect(req.method).toEqual('PUT')
       resolve()
+      done() // to handle timer cleanup duties
     })
     login(gConfig)
   })
@@ -255,9 +267,10 @@ test('OPTIONS http method', () => {
   })
 
   return new Promise(resolve => {
-    helpers.handleOPTIONS.mockImplementation((req, res) => {
+    helpers.handleOPTIONS.mockImplementation((req, _res, done) => {
       expect(req.method).toEqual('OPTIONS')
       resolve()
+      done() // to handle timer cleanup duties
     })
     login(gConfig)
   })
@@ -270,6 +283,8 @@ test('test browser config is passed to open', async () => {
       resolve(createMockServer(request, createMockResponse()))
     })
   })
+  // to handle timer cleanup duties
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
 
   await login({ browser: 'Firefox', ...gConfig })
   expect(CliUx.ux.open.mock.calls.length).toEqual(1)

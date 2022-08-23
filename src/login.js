@@ -65,21 +65,21 @@ async function login (options) {
       }
     }, timeout * 1000)
 
+    const cleanup = () => {
+      clearTimeout(timerId)
+      if (!bare) {
+        spinner.stop()
+      }
+      server.close()
+    }
+
     server.on('request', async (request, response) => {
       aioLogger.debug(`http method: ${request.method}`)
-
-      const cleanup = () => {
-        clearTimeout(timerId)
-        if (!bare) {
-          spinner.stop()
-        }
-        server.close()
-      }
 
       try {
         switch (request.method) {
           case 'OPTIONS':
-            return handleOPTIONS(request, response, env)
+            return handleOPTIONS(request, response, cleanup, env)
           case 'POST': {
             const result = await handlePOST(request, response, id, cleanup, env)
             resolve(result)
@@ -91,12 +91,13 @@ async function login (options) {
           }
             break
           default:
-            return handleUnsupportedHttpMethod(request, response, env)
+            return handleUnsupportedHttpMethod(request, response, cleanup, env)
         }
       } catch (error) {
         if (!bare) {
           spinner.fail()
         }
+        cleanup()
         reject(error)
       }
     })
