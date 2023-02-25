@@ -78,8 +78,7 @@ async function imsLogin (ims, config) {
         env: config.env,
         timeout: config.timeout,
         open: config.open,
-        browser: config.browser,
-        client_id: config.client_id
+        browser: config.browser
       }
       return login(options)
     })
