@@ -12,35 +12,24 @@ governing permissions and limitations under the License.
 
 const helpers = require('../src/helpers')
 const { authSiteUrl, getImsCliOAuthUrl } = jest.requireActual('../src/helpers')
-const { CliUx } = require('@oclif/core')
-const ora = require('ora')
+const { ux } = require('@oclif/core')
+const open = require('open')
 const login = require('../src/login')
 const url = require('url')
 
 // //////////////////////////////////////////
 
 jest.mock('../src/helpers')
-jest.mock('ora')
+jest.mock('open', () => jest.fn())
 jest.mock('@oclif/core', () => ({
-  CliUx: {
-    ux: {
-      open: jest.fn(),
-      url: jest.fn()
+  ux: {
+    url: jest.fn(),
+    action: {
+      start: jest.fn(),
+      stop: jest.fn()
     }
   }
 }))
-
-ora.mockImplementation(() => {
-  return {
-    start: () => {
-      return {
-        info: jest.fn(),
-        stop: jest.fn(),
-        fail: jest.fn()
-      }
-    }
-  }
-})
 
 const gConfig = {
   client_id: 'my-client-id',
@@ -113,10 +102,10 @@ test('test the url returned by cli.open, no query params should contain undefine
   helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
 
   await login(gConfig)
-  expect(CliUx.ux.open.mock.calls.length).toEqual(1)
+  expect(open.mock.calls.length).toEqual(1)
 
   // ACNA-1315 - test the url returned by cli.open, no query param values should contain undefined
-  const cliOpenCallUrl = new url.URL(CliUx.ux.open.mock.calls[0][0])
+  const cliOpenCallUrl = new url.URL(open.mock.calls[0][0])
   for (const [, value] of cliOpenCallUrl.searchParams.entries()) {
     expect(value).not.toMatch('undefined')
   }
@@ -148,8 +137,8 @@ test('login (POST)', async () => {
   // Success (got auth code)
   helpers.handlePOST.mockImplementation(await createPostResponse(myAuthCode))
   await expect(login(gConfig)).resolves.toEqual(myAuthCode)
-  expect(CliUx.ux.url.mock.calls.length).toEqual(1)
-  expect(CliUx.ux.open.mock.calls.length).toEqual(1)
+  expect(ux.url.mock.calls.length).toEqual(1)
+  expect(open.mock.calls.length).toEqual(1)
 
   // Success (got access token)
   helpers.handlePOST.mockImplementation(await createPostResponse(myAccessToken))
@@ -186,8 +175,8 @@ test('login (GET)', async () => {
   // Success (got auth code)
   helpers.handleGET.mockImplementation(await createGetResponse(myAuthCode))
   await expect(login(gConfig)).resolves.toEqual(myAuthCode)
-  expect(CliUx.ux.url.mock.calls.length).toEqual(1)
-  expect(CliUx.ux.open.mock.calls.length).toEqual(1)
+  expect(ux.url.mock.calls.length).toEqual(1)
+  expect(open.mock.calls.length).toEqual(1)
 
   // Success (got access token)
   helpers.handleGET.mockImplementation(await createGetResponse(myAccessToken))
@@ -201,7 +190,7 @@ test('login (GET)', async () => {
 test('open:false', async () => {
   const myAccessToken = { access_token: { token: 'my-access-token', expiry: 123 } }
   await expect(login({ ...gConfig, open: false })).resolves.toEqual(myAccessToken)
-  expect(CliUx.ux.open.mock.calls.length).toEqual(0)
+  expect(open.mock.calls.length).toEqual(0)
 })
 
 test('error', async () => {
@@ -287,8 +276,8 @@ test('test browser config is passed to open', async () => {
   helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
 
   await login({ browser: 'Firefox', ...gConfig })
-  expect(CliUx.ux.open.mock.calls.length).toEqual(1)
+  expect(open.mock.calls.length).toEqual(1)
 
-  const openOptions = CliUx.ux.open.mock.calls[0][1]
+  const openOptions = open.mock.calls[0][1]
   expect(openOptions.app).toEqual('Firefox')
 })

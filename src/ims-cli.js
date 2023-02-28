@@ -73,7 +73,14 @@ async function imsLogin (ims, config) {
   aioLogger.debug(`imsLogin config: ${JSON.stringify(config)}`)
   return canSupport(config)
     .then(() => {
-      const options = { client_id: config.client_id, bare: config[CLI_BARE_OUTPUT], env: config.env, timeout: config.timeout, open: config.open, browser: config.browser }
+      const options = {
+        client_id: config.client_id,
+        bare: config[CLI_BARE_OUTPUT],
+        env: config.env,
+        timeout: config.timeout,
+        open: config.open,
+        browser: config.browser
+      }
       return login(options)
     })
 }

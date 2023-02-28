@@ -11,8 +11,8 @@ governing permissions and limitations under the License.
 */
 
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:login', { provider: 'debug' })
-const ora = require('ora')
-const { CliUx } = require('@oclif/core')
+const { ux } = require('@oclif/core')
+const open = require('open')
 const { randomId, authSiteUrl, getImsCliOAuthUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 const { codes: errors } = require('./errors')
 
@@ -33,8 +33,16 @@ const LOGIN_SUCCESS = '/login-success'
 async function login (options) {
   aioLogger.debug(`login options: ${JSON.stringify(options)}`)
 
-  // eslint-disable-next-line camelcase
-  const { bare = false, env, timeout = AUTH_TIMEOUT_SECONDS, client_id, scope, open = true, browser: app } = options
+  const {
+    bare = false,
+    env,
+    timeout = AUTH_TIMEOUT_SECONDS,
+    client_id, // eslint-disable-line camelcase
+    scope,
+    open: autoOpen = true,
+    browser: app
+  } = options
+
   const redirect_uri = `${getImsCliOAuthUrl(env)}${LOGIN_SUCCESS}` // eslint-disable-line camelcase
   const id = randomId()
   const server = await createServer()
@@ -45,30 +53,26 @@ async function login (options) {
   aioLogger.debug(`Local server created on port ${serverPort}.`)
 
   return new Promise((resolve, reject) => {
-    let spinner
-
     if (!bare) {
       console.log('Visit this url to log in: ')
-      CliUx.ux.url(uri, uri)
-      spinner = ora('Waiting for browser login').start()
+      ux.url(uri, uri)
+      ux.action.start('Waiting for browser login')
     }
-    if (open) {
-      CliUx.ux.open(uri, {
-        app
-      })
+    if (autoOpen) {
+      open(uri, { app })
     }
 
     const timerId = setTimeout(() => {
       reject(new errors.TIMEOUT({ messageValues: timeout }))
       if (!bare) {
-        spinner.stop()
+        ux.action.stop()
       }
     }, timeout * 1000)
 
     const cleanup = () => {
       clearTimeout(timerId)
       if (!bare) {
-        spinner.stop()
+        ux.action.stop()
       }
       server.close()
     }
@@ -95,7 +99,8 @@ async function login (options) {
         }
       } catch (error) {
         if (!bare) {
-          spinner.fail()
+          ux.action.stop()
+          // spinner.fail()
         }
         cleanup()
         reject(error)
