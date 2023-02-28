@@ -53,14 +53,12 @@ async function login (options) {
   aioLogger.debug(`Local server created on port ${serverPort}.`)
 
   return new Promise((resolve, reject) => {
-    // let spinner
 
     if (!bare) {
       console.log('Visit this url to log in: ')
       ux.url(uri, uri)
       ux.action.start('Waiting for browser login')
     }
-    console.log('open = ', open)
     if (autoOpen) {
       open(uri, { app })
     }
@@ -69,7 +67,6 @@ async function login (options) {
       reject(new errors.TIMEOUT({ messageValues: timeout }))
       if (!bare) {
         ux.action.stop()
-        // spinner.stop()
       }
     }, timeout * 1000)
 
@@ -77,7 +74,6 @@ async function login (options) {
       clearTimeout(timerId)
       if (!bare) {
         ux.action.stop()
-        // spinner.stop()
       }
       server.close()
     }
