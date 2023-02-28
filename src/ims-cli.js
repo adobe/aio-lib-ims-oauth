@@ -74,6 +74,7 @@ async function imsLogin (ims, config) {
   return canSupport(config)
     .then(() => {
       const options = {
+        client_id: config.client_id,
         bare: config[CLI_BARE_OUTPUT],
         env: config.env,
         timeout: config.timeout,
