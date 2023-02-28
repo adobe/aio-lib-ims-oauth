@@ -53,7 +53,6 @@ async function login (options) {
   aioLogger.debug(`Local server created on port ${serverPort}.`)
 
   return new Promise((resolve, reject) => {
-
     if (!bare) {
       console.log('Visit this url to log in: ')
       ux.url(uri, uri)
