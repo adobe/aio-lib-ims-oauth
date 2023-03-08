@@ -12,7 +12,6 @@ governing permissions and limitations under the License.
 
 const helpers = require('../src/helpers')
 const { authSiteUrl, getImsCliOAuthUrl } = jest.requireActual('../src/helpers')
-const { ux } = require('@oclif/core')
 const open = require('open')
 const login = require('../src/login')
 const url = require('url')
@@ -21,15 +20,6 @@ const url = require('url')
 
 jest.mock('../src/helpers')
 jest.mock('open', () => jest.fn())
-jest.mock('@oclif/core', () => ({
-  ux: {
-    url: jest.fn(),
-    action: {
-      start: jest.fn(),
-      stop: jest.fn()
-    }
-  }
-}))
 
 const gConfig = {
   client_id: 'my-client-id',
@@ -76,21 +66,27 @@ beforeAll(() => {
   helpers.authSiteUrl.mockImplementation(authSiteUrl)
   helpers.getImsCliOAuthUrl.mockImplementation(getImsCliOAuthUrl)
   jest.useRealTimers()
+  jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterAll(() => {
   jest.useFakeTimers()
+  console.error.mockRestore()
 })
 
 beforeEach(() => {
   jest.clearAllMocks()
 })
 
+afterEach(() => {
+  console.error.mockClear()
+})
+
 test('exports', () => {
   expect(typeof login).toEqual('function')
 })
 
-test('test the url returned by cli.open, no query params should contain undefined', async () => {
+test('test the url returned by open, no query params should contain undefined', async () => {
   const request = { method: 'GET' }
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
@@ -103,6 +99,8 @@ test('test the url returned by cli.open, no query params should contain undefine
 
   await login(gConfig)
   expect(open.mock.calls.length).toEqual(1)
+
+  expect(console.error).toHaveBeenCalledWith('Visit this url to log in:\n', expect.any(String))
 
   // ACNA-1315 - test the url returned by cli.open, no query param values should contain undefined
   const cliOpenCallUrl = new url.URL(open.mock.calls[0][0])
@@ -137,7 +135,6 @@ test('login (POST)', async () => {
   // Success (got auth code)
   helpers.handlePOST.mockImplementation(await createPostResponse(myAuthCode))
   await expect(login(gConfig)).resolves.toEqual(myAuthCode)
-  expect(ux.url.mock.calls.length).toEqual(1)
   expect(open.mock.calls.length).toEqual(1)
 
   // Success (got access token)
@@ -175,7 +172,6 @@ test('login (GET)', async () => {
   // Success (got auth code)
   helpers.handleGET.mockImplementation(await createGetResponse(myAuthCode))
   await expect(login(gConfig)).resolves.toEqual(myAuthCode)
-  expect(ux.url.mock.calls.length).toEqual(1)
   expect(open.mock.calls.length).toEqual(1)
 
   // Success (got access token)
@@ -259,7 +255,6 @@ test('OPTIONS http method', () => {
     helpers.handleOPTIONS.mockImplementation((req, _res, done) => {
       expect(req.method).toEqual('OPTIONS')
       resolve()
-      done() // to handle timer cleanup duties
     })
     login(gConfig)
   })

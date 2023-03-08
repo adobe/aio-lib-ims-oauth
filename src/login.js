@@ -11,7 +11,7 @@ governing permissions and limitations under the License.
 */
 
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:login', { provider: 'debug' })
-const { ux } = require('@oclif/core')
+const ora = require('ora')
 const open = require('open')
 const { randomId, authSiteUrl, getImsCliOAuthUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 const { codes: errors } = require('./errors')
@@ -53,10 +53,11 @@ async function login (options) {
   aioLogger.debug(`Local server created on port ${serverPort}.`)
 
   return new Promise((resolve, reject) => {
+    let spinner
     if (!bare) {
-      console.log('Visit this url to log in: ')
-      ux.url(uri, uri)
-      ux.action.start('Waiting for browser login')
+      // stderr so it is always visible
+      console.error('Visit this url to log in:\n', uri)
+      spinner = ora('Waiting for browser login').start()
     }
     if (autoOpen) {
       open(uri, { app })
@@ -65,25 +66,24 @@ async function login (options) {
     const timerId = setTimeout(() => {
       reject(new errors.TIMEOUT({ messageValues: timeout }))
       if (!bare) {
-        ux.action.stop()
+        spinner.fail()
       }
     }, timeout * 1000)
 
     const cleanup = () => {
       clearTimeout(timerId)
       if (!bare) {
-        ux.action.stop()
+        spinner.succeed('Login successful')
       }
       server.close()
     }
 
     server.on('request', async (request, response) => {
       aioLogger.debug(`http method: ${request.method}`)
-
       try {
         switch (request.method) {
           case 'OPTIONS':
-            return handleOPTIONS(request, response, cleanup, env)
+            return handleOPTIONS(request, response, null, env)
           case 'POST': {
             const result = await handlePOST(request, response, id, cleanup, env)
             resolve(result)
@@ -99,8 +99,8 @@ async function login (options) {
         }
       } catch (error) {
         if (!bare) {
-          ux.action.stop()
-          // spinner.fail()
+          // ux.action.stop()
+          spinner.fail()
         }
         cleanup()
         reject(error)
