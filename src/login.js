@@ -99,7 +99,6 @@ async function login (options) {
         }
       } catch (error) {
         if (!bare) {
-          // ux.action.stop()
           spinner.fail()
         }
         cleanup()
