@@ -141,7 +141,7 @@ function codeTransform (code, codeType) {
 function handleOPTIONS (_request, response, done, env = getCliEnv()) {
   aioLogger.debug(`handleOPTIONS env: ${env}`)
   cors(response, env).end()
-  done()
+  done && done()
 }
 
 /**
