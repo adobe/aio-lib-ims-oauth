@@ -10,7 +10,6 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const login = require('./login')
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:ims-oauth_server_to_server', { provider: 'debug' })
 const { codes: errors } = require('./errors')
 
@@ -26,10 +25,10 @@ function configMissingKeys (configData) {
 
   const missingKeys = []
   const requiredKeys = [
-    'client_id', 
-    'client_secrets', 
-    'technical_account_email', 
-    'technical_account_id', 
+    'client_id',
+    'client_secrets',
+    'technical_account_email',
+    'technical_account_id',
     'scopes',
     'ims_org_id'
   ]
@@ -76,8 +75,9 @@ async function imsLogin (ims, config) {
 
   return canSupport(config)
     .then(() => ims.getAccessTokenByClientCredentials(
-      config.client_id, config.client_secret, config.ims_org_id, config.scopes)
-    )}
+      config.client_id, config.client_secrets[0], config.ims_org_id, config.scopes)
+    )
+}
 
 module.exports = {
   canSupport,
