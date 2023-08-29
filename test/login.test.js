@@ -86,7 +86,7 @@ test('exports', () => {
   expect(typeof login).toEqual('function')
 })
 
-test('test the url returned by open, no query params should contain undefined', async () => {
+test('the url returned by open, no query params should contain undefined', async () => {
   const request = { method: 'GET' }
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
@@ -260,7 +260,7 @@ test('OPTIONS http method', () => {
   })
 })
 
-test('test browser config is passed to open', async () => {
+test('browser config is passed to open', async () => {
   const request = { method: 'GET' }
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
