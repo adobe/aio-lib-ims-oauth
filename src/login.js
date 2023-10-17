@@ -39,6 +39,7 @@ async function login (options) {
     timeout = AUTH_TIMEOUT_SECONDS,
     client_id, // eslint-disable-line camelcase
     scope,
+    forceLogin,
     open: autoOpen = true,
     browser: app
   } = options
@@ -48,7 +49,7 @@ async function login (options) {
   const server = await createServer()
   const serverPort = server.address().port
   // eslint-disable-next-line camelcase
-  const uri = authSiteUrl({ id, port: serverPort, client_id, scope, redirect_uri }, env)
+  const uri = authSiteUrl({ id, port: serverPort, client_id, scope, redirect_uri }, env, forceLogin)
 
   aioLogger.debug(`Local server created on port ${serverPort}.`)
 
@@ -64,10 +65,10 @@ async function login (options) {
     }
 
     const timerId = setTimeout(() => {
-      reject(new errors.TIMEOUT({ messageValues: timeout }))
       if (!bare) {
         spinner.fail()
       }
+      reject(new errors.TIMEOUT({ messageValues: timeout }))
     }, timeout * 1000)
 
     const cleanup = () => {
