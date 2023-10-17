@@ -57,8 +57,9 @@ async function login (options) {
     let spinner
     if (!bare) {
       // stderr so it is always visible
-      console.error('Visit this url to log in:\n', uri)
-      spinner = ora('Waiting for browser login').start()
+      spinner = ora()
+      spinner.stopAndPersist({ text: 'Visit this url to log in:\n' + uri })
+      spinner.start('Waiting for browser login')
     }
     if (autoOpen) {
       open(uri, { app })
