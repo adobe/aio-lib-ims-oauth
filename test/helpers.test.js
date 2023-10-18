@@ -11,8 +11,20 @@ governing permissions and limitations under the License.
 */
 
 const {
-  IMS_CLI_OAUTH_URL, randomId, authSiteUrl, createServer, getImsCliOAuthUrl, cors, handleGET, handlePOST, stringToJson, handleUnsupportedHttpMethod,
-  handleOPTIONS, codeTransform, patchWindowsEnv
+  IMS_CLI_OAUTH_URL,
+  IMS_CLI_OAUTH_LOGOUT_URL,
+  randomId,
+  authSiteUrl,
+  createServer,
+  getImsCliOAuthUrl,
+  cors,
+  handleGET,
+  handlePOST,
+  stringToJson,
+  handleUnsupportedHttpMethod,
+  handleOPTIONS,
+  codeTransform,
+  patchWindowsEnv
 } = require('../src/helpers')
 
 const http = require('node:http')
@@ -153,6 +165,7 @@ test('authSiteUrl', () => {
   url = IMS_CLI_OAUTH_URL[env]
   queryParams = { a: 'b', c: 'd' }
   expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
+  expect(authSiteUrl(queryParams, env, true)).toEqual(`${IMS_CLI_OAUTH_LOGOUT_URL[env]}${encodeURIComponent(url + '?a=b&c=d')}`)
 
   // coverage (default env)
   env = undefined
@@ -164,6 +177,7 @@ test('authSiteUrl', () => {
   url = IMS_CLI_OAUTH_URL[env]
   queryParams = { a: 'b', c: 'd', e: undefined, f: null }
   expect(authSiteUrl(queryParams, env)).toEqual(`${url}?a=b&c=d`)
+  expect(authSiteUrl(queryParams, env, true)).toEqual(`${IMS_CLI_OAUTH_LOGOUT_URL[env]}${encodeURIComponent(url + '?a=b&c=d')}`)
 
   // env set via global config (stage)
   env = STAGE_ENV

@@ -26,6 +26,12 @@ const IMS_CLI_OAUTH_URL = {
   stage: 'https://aio-login-stage.adobeioruntime.net/api/v1/web/default/applogin'
 }
 
+const IMS_CLI_OAUTH_LOGOUT_URL = {
+  // TODO: separate out client_id
+  prod: 'https://ims-na1.adobelogin.com/ims/logout/v1?client_id=aio-cli-console-auth&redirect_uri=',
+  stage: 'https://ims-na1-stg1.adobelogin.com/ims/logout/v1?client_id=aio-cli-console-auth-stage&redirect_uri='
+}
+
 /**
  * Create a local server.
  *
@@ -57,9 +63,10 @@ function getImsCliOAuthUrl (env = getCliEnv()) {
  *
  * @param {object} queryParams the query params to add to the url
  * @param {string} [env=prod] the IMS environment
+ * @param {boolean} [forceLogin=false] whether to force a logout before login
  * @returns {string} the constructed url
  */
-function authSiteUrl (queryParams, env = getCliEnv()) {
+function authSiteUrl (queryParams, env = getCliEnv(), forceLogin = false) {
   const uri = new url.URL(getImsCliOAuthUrl(env))
   aioLogger.debug(`authSiteUrl queryParams: ${JSON.stringify(queryParams)} env: ${env} uri: ${uri}`)
 
@@ -69,7 +76,13 @@ function authSiteUrl (queryParams, env = getCliEnv()) {
       uri.searchParams.set(key, queryParams[key])
     }
   })
-  return uri.href
+  if (forceLogin) {
+    const forceUri = new url.URL(IMS_CLI_OAUTH_LOGOUT_URL[env])
+    forceUri.searchParams.set('redirect_uri', encodeURI(uri.href))
+    return forceUri.href
+  } else {
+    return uri.href
+  }
 }
 
 /**
@@ -303,5 +316,6 @@ module.exports = {
   authSiteUrl,
   createServer,
   IMS_CLI_OAUTH_URL,
+  IMS_CLI_OAUTH_LOGOUT_URL,
   getImsCliOAuthUrl
 }

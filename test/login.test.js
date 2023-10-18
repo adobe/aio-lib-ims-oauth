@@ -15,6 +15,7 @@ const { authSiteUrl, getImsCliOAuthUrl } = jest.requireActual('../src/helpers')
 const open = require('open')
 const login = require('../src/login')
 const url = require('url')
+const { stderr } = require('stdout-stderr')
 
 // //////////////////////////////////////////
 
@@ -28,7 +29,6 @@ const gConfig = {
   redirect_uri: 'https://auth.url'
 }
 
-jest.spyOn(console, 'log').mockImplementation(() => {})
 const createMockResponse = () => ({
   setHeader: jest.fn(),
   end: jest.fn(),
@@ -55,6 +55,8 @@ function createMockServer (request, response, port = 8000, delayTriggerMs = 100)
         setTimeout(callback, 100)
       } else if (event === 'request') {
         setTimeout(() => callback(request, response), delayTriggerMs)
+      } else {
+        throw new Error(`Unexpected event: ${event}`)
       }
     }),
     address: jest.fn(() => ({ port }))
@@ -66,20 +68,19 @@ beforeAll(() => {
   helpers.authSiteUrl.mockImplementation(authSiteUrl)
   helpers.getImsCliOAuthUrl.mockImplementation(getImsCliOAuthUrl)
   jest.useRealTimers()
-  jest.spyOn(console, 'error').mockImplementation(() => {})
 })
 
 afterAll(() => {
   jest.useFakeTimers()
-  console.error.mockRestore()
 })
 
 beforeEach(() => {
   jest.clearAllMocks()
+  stderr.start()
 })
 
 afterEach(() => {
-  console.error.mockClear()
+  stderr.stop()
 })
 
 test('exports', () => {
@@ -97,10 +98,9 @@ test('the url returned by open, no query params should contain undefined', async
   // to handle timer cleanup duties
   helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
 
-  await login(gConfig)
+  await login({ bare: false, ...gConfig })
   expect(open.mock.calls.length).toEqual(1)
-
-  expect(console.error).toHaveBeenCalledWith('Visit this url to log in:\n', expect.any(String))
+  expect(stderr.output).toMatch(/Visit this url to log in:\n/)
 
   // ACNA-1315 - test the url returned by cli.open, no query param values should contain undefined
   const cliOpenCallUrl = new url.URL(open.mock.calls[0][0])
@@ -243,6 +243,7 @@ test('unsupported http method', () => {
   })
 })
 
+// this one
 test('OPTIONS http method', () => {
   const request = { method: 'OPTIONS' }
   helpers.createServer.mockImplementation(() => {
@@ -255,6 +256,7 @@ test('OPTIONS http method', () => {
     helpers.handleOPTIONS.mockImplementation((req, _res, done) => {
       expect(req.method).toEqual('OPTIONS')
       resolve()
+      done && done()
     })
     login(gConfig)
   })
