@@ -33,7 +33,7 @@
   },
   "engineStrict": true,
   "engines": {
-    "node": "^14.18 || ^16.13 || >=18"
+    "node": ">=18"
   },
   "files": [
     "/src"
