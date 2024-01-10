@@ -5,9 +5,9 @@
   "author": "Adobe Inc.",
   "bugs": "https://github.com/adobe/aio-lib-ims-oauth/issues",
   "dependencies": {
-    "@adobe/aio-lib-core-errors": "^3.1.0",
-    "@adobe/aio-lib-core-logging": "^2.0.0",
-    "@adobe/aio-lib-env": "^2.0.0",
+    "@adobe/aio-lib-core-errors": "^4",
+    "@adobe/aio-lib-core-logging": "^3",
+    "@adobe/aio-lib-env": "^3",
     "open": "^8.4.2",
     "ora": "^5.4.1"
   },
