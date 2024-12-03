@@ -85,6 +85,7 @@ async function login (options) {
       try {
         switch (request.method) {
           case 'OPTIONS':
+            // we don't want to exit (resolve) here - no cleanup also
             return handleOPTIONS(request, response, null, env)
           case 'POST': {
             const result = await handlePOST(request, response, id, cleanup, env)
