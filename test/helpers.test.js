@@ -11,6 +11,8 @@ governing permissions and limitations under the License.
 */
 
 const {
+  parseJson,
+  parseConfig,
   IMS_CLI_OAUTH_URL,
   IMS_CLI_OAUTH_LOGOUT_URL,
   randomId,
@@ -71,11 +73,13 @@ afterAll(() => {
 })
 
 beforeEach(() => {
-  jest.restoreAllMocks()
+  jest.clearAllMocks()
   libEnv.getCliEnv.mockReturnValue(PROD_ENV) // default
 })
 
 test('exports', () => {
+  expect(typeof parseJson).toEqual('function')
+  expect(typeof parseConfig).toEqual('function')
   expect(typeof IMS_CLI_OAUTH_URL).toEqual('object')
   expect(typeof createServer).toEqual('function')
   expect(typeof randomId).toEqual('function')
@@ -88,6 +92,35 @@ test('exports', () => {
   expect(typeof handleUnsupportedHttpMethod).toEqual('function')
   expect(typeof handleOPTIONS).toEqual('function')
   expect(typeof codeTransform).toEqual('function')
+})
+
+test('parseJson', () => {
+  const myString = 'some-string'
+  const myArray = ['foo', 'bar']
+  const myObject = { foo: 'bar' }
+
+  expect(parseJson(myString)).toEqual(myString) // string, returns string
+  expect(parseJson(JSON.stringify(myArray))).toEqual(myArray) // string contains array, returns json
+  expect(parseJson(JSON.stringify(myObject))).toEqual(myObject) // string contains object, returns json
+  expect(parseJson(myObject)).toEqual(myObject) // object, returns object
+})
+
+test('parseConfig', () => {
+  const myString = 'the rain in Spain falls in the plain'
+  const myArray = ['the', 'quick', 'brown', 'fox']
+  const myObject = { foo: 'bar' }
+
+  const config = {
+    a: myString,
+    b: JSON.stringify(myArray),
+    c: JSON.stringify(myObject)
+  }
+
+  const parsedConfig = parseConfig(config)
+
+  expect(parsedConfig.a).toEqual(myString) // string, returns string
+  expect(parsedConfig.b).toEqual(myArray) // string contains array, returns array
+  expect(parsedConfig.c).toEqual(myObject) // string contains object, returns object
 })
 
 test('createServer', async () => {
