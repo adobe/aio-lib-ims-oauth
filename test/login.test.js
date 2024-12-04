@@ -40,7 +40,7 @@ const createMockResponse = () => ({
  * Create a mock http.server object
  *
  * @private
- * @param {object} request the request to trigger
+ * @param {object | Array<object>} request the request to trigger
  * @param {object} response the response to trigger
  * @param {number} port the port number
  * @param {number} [delayTriggerMs=100] the delay in triggering the request callback
@@ -54,7 +54,15 @@ function createMockServer (request, response, port = 8000, delayTriggerMs = 100)
       if (event === 'listening') {
         setTimeout(callback, 100)
       } else if (event === 'request') {
-        setTimeout(() => callback(request, response), delayTriggerMs)
+        setTimeout(() => {
+          if (Array.isArray(request)) {
+            request.forEach((req) => {
+              callback(req, response)
+            })
+          } else {
+            callback(request, response)
+          }
+        }, delayTriggerMs)
       } else {
         throw new Error(`Unexpected event: ${event}`)
       }
@@ -243,20 +251,23 @@ test('unsupported http method', () => {
   })
 })
 
-// this one
 test('OPTIONS http method', () => {
-  const request = { method: 'OPTIONS' }
+  const requests = [{ method: 'OPTIONS' }, { method: 'GET' }]
   helpers.createServer.mockImplementation(() => {
     return new Promise(resolve => {
-      resolve(createMockServer(request, createMockResponse()))
+      resolve(createMockServer(requests, createMockResponse()))
     })
   })
 
   return new Promise(resolve => {
     helpers.handleOPTIONS.mockImplementation((req, _res, done) => {
       expect(req.method).toEqual('OPTIONS')
-      resolve()
       done && done()
+    })
+    // to handle timer cleanup duties
+    helpers.handleGET.mockImplementation((_req, _res, _id, done) => {
+      resolve()
+      done()
     })
     login(gConfig)
   })

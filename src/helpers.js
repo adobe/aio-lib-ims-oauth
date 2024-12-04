@@ -303,7 +303,38 @@ function patchWindowsEnv () {
   }
 }
 
+/**
+ * Convert a string value to Json. Returns the original string if it fails.
+ *
+ * @private
+ * @param {string} value the value to attempt conversion to Json
+ * @returns {object|string} the converted json, or the original string
+ */
+function parseJson (value) {
+  try {
+    return JSON.parse(value)
+  } catch (e) {
+    return value
+  }
+}
+
+/**
+ * Parse the config values to JSON (1 level deep)
+ *
+ * @param {object} config the config values to parse
+ * @returns {object} the parsed config
+ */
+function parseConfig (config) {
+  return Object.entries(config)
+    .reduce((obj, [key, value]) => {
+      obj[key] = parseJson(value)
+      return obj
+    }, {})
+}
+
 module.exports = {
+  parseJson,
+  parseConfig,
   patchWindowsEnv,
   handleGET,
   handlePOST,

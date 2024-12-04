@@ -27,7 +27,7 @@ const gConfig = {
 }
 
 beforeEach(() => {
-  jest.restoreAllMocks()
+  jest.clearAllMocks()
 })
 
 test('has ims plugin interface', () => {

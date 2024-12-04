@@ -12,6 +12,7 @@ governing permissions and limitations under the License.
 
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:ims-oauth_server_to_server', { provider: 'debug' })
 const { codes: errors } = require('./errors')
+const { parseConfig } = require('./helpers')
 
 /**
  * Checks whether the configuration data is missing any required keys.
@@ -74,8 +75,11 @@ async function imsLogin (ims, config) {
   aioLogger.debug(`imsLogin config: ${JSON.stringify(config)}`)
 
   return canSupport(config)
-    .then(() => ims.getAccessTokenByClientCredentials(
-      config.client_id, config.client_secrets[0], config.ims_org_id, config.scopes)
+    .then(() => parseConfig(config))
+    // eslint-disable-next-line camelcase
+    .then(({ client_id, client_secrets, ims_org_id, scopes }) =>
+      // eslint-disable-next-line camelcase
+      ims.getAccessTokenByClientCredentials(client_id, client_secrets[0], ims_org_id, scopes)
     )
 }
 
