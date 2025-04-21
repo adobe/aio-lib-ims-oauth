@@ -8,7 +8,7 @@
     "@adobe/aio-lib-core-errors": "^4",
     "@adobe/aio-lib-core-logging": "^3",
     "@adobe/aio-lib-env": "^3",
-    "open": "^8.4.2",
+    "open": "^10.1.1",
     "ora": "^5.4.1"
   },
   "peerDependencies": {
