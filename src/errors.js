@@ -47,3 +47,5 @@ module.exports = {
 E('HTTP_ERROR', 'error code=%s')
 E('MISSING_PROPERTIES', 'OAuth2 not supported due to some missing properties: %s')
 E('TIMEOUT', 'Timed out after %s seconds.')
+E('IMSOAUTHCLI_LOGIN_CI_ERROR', 'Interactive login is not supported in CI environments. Use a service account and configure credentials via environment variables. See: https://developer.adobe.com/app-builder/docs/guides/deployment/ci_cd_for_firefly_apps/')
+

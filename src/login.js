@@ -13,6 +13,7 @@ governing permissions and limitations under the License.
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:login', { provider: 'debug' })
 const ora = require('ora')
 const open = require('./open')
+const ciInfo = require('ci-info')
 const { randomId, authSiteUrl, getImsCliOAuthUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 const { codes: errors } = require('./errors')
 
@@ -55,59 +56,71 @@ async function login (options) {
 
   return new Promise((resolve, reject) => {
     let spinner
-    if (!bare) {
-      // stderr so it is always visible
+
+    if (ciInfo.isCI && !bare) {
+      // CI path and !bare (so show spinner messages)
       spinner = ora()
-      spinner.stopAndPersist({ text: 'Visit this url to log in:\n' + uri })
-      spinner.start('Waiting for browser login')
-    }
-    if (autoOpen) {
-      open(uri, { app })
-    }
-
-    const timerId = setTimeout(() => {
+      spinner.fail('CI Environment: Interactive login not supported. Use service token/env vars for authentication.')
+      return reject(new errors.IMSOAUTHCLI_LOGIN_CI_ERROR())
+    } else if (ciInfo.isCI) {
+      // CI Environment Path, and bare (so no spinner messages)
+      return reject(new errors.IMSOAUTHCLI_LOGIN_CI_ERROR())
+    } else {
+      // original logic for Non-CI path
       if (!bare) {
-        spinner.fail()
+        // stderr so it is always visible
+        spinner = ora()
+        spinner.stopAndPersist({ text: 'Visit this url to log in:\n' + uri })
+        spinner.start('Waiting for browser login')
       }
-      reject(new errors.TIMEOUT({ messageValues: timeout }))
-    }, timeout * 1000)
 
-    const cleanup = () => {
-      clearTimeout(timerId)
-      if (!bare) {
-        spinner.succeed('Login successful')
+      if (autoOpen) {
+        open(uri, { app })
       }
-      server.close()
-    }
 
-    server.on('request', async (request, response) => {
-      aioLogger.debug(`http method: ${request.method}`)
-      try {
-        switch (request.method) {
-          case 'OPTIONS':
-            // we don't want to exit (resolve) here - no cleanup also
-            return handleOPTIONS(request, response, null, env)
-          case 'POST': {
-            const result = await handlePOST(request, response, id, cleanup, env)
-            resolve(result)
-          }
-            break
-          case 'GET': {
-            const result = await handleGET(request, response, id, cleanup, env)
-            resolve(result)
-          }
-            break
-          default:
-            return handleUnsupportedHttpMethod(request, response, cleanup, env)
-        }
-      } catch (error) {
-        if (!bare) {
+      const timerId = setTimeout(() => {
+        if (!bare && spinner) { // Ensure spinner exists
           spinner.fail()
         }
-        cleanup()
-        reject(error)
+        reject(new errors.TIMEOUT({ messageValues: timeout }))
+      }, timeout * 1000)
+
+      const cleanup = () => {
+        clearTimeout(timerId)
+        if (!bare && spinner) { // Ensure spinner exists
+          spinner.succeed('Login successful')
+        }
+        server.close()
       }
-    })
+
+      server.on('request', async (request, response) => {
+        aioLogger.debug(`http method: ${request.method}`)
+        try {
+          switch (request.method) {
+            case 'OPTIONS':
+              return handleOPTIONS(request, response, null, env)
+            case 'POST': {
+              const result = await handlePOST(request, response, id, cleanup, env)
+              resolve(result)
+            }
+              break
+            case 'GET': {
+              const result = await handleGET(request, response, id, cleanup, env)
+              resolve(result)
+            }
+              break
+            default:
+              return handleUnsupportedHttpMethod(request, response, cleanup, env)
+          }
+        } catch (error) {
+          if (!bare && spinner) { // Ensure spinner exists
+            spinner.fail()
+          }
+          cleanup()
+          reject(error)
+        }
+      })
+    }
   })
 }
 
