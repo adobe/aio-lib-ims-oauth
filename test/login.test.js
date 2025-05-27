@@ -106,13 +106,6 @@ beforeEach(() => {
   jest.clearAllMocks()
   stderr.start()
   ciInfo.isCI = false
-  // Clear ora mocks
-  ora.mockClear() // Clear calls to the ora() constructor itself
-  mockOraSpinnerInstance.fail.mockClear()
-  mockOraSpinnerInstance.succeed.mockClear()
-  mockOraSpinnerInstance.start.mockClear()
-  mockOraSpinnerInstance.stopAndPersist.mockClear()
-  mockOraSpinnerInstance.info.mockClear()
 })
 
 afterEach(() => {
