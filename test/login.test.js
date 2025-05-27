@@ -17,12 +17,30 @@ const login = require('../src/login')
 const url = require('url')
 const { stderr } = require('stdout-stderr')
 const ciInfo = require('ci-info')
+const errors = require('../src/errors')
 
 // //////////////////////////////////////////
 
 jest.mock('../src/helpers')
 jest.mock('open', () => jest.fn())
 jest.mock('ci-info')
+
+const mockOraSpinnerInstance = {
+  fail: jest.fn(),
+  succeed: jest.fn(),
+  start: jest.fn(() => mockOraSpinnerInstance),
+  stopAndPersist: jest.fn(options => {
+    if (options && options.text) {
+      process.stderr.write(options.text + '\n')
+    }
+    return mockOraSpinnerInstance
+  }),
+  info: jest.fn(() => mockOraSpinnerInstance)
+}
+
+jest.mock('ora', () => jest.fn().mockImplementation(() => mockOraSpinnerInstance))
+
+const ora = require('ora')
 
 const gConfig = {
   client_id: 'my-client-id',
@@ -88,6 +106,13 @@ beforeEach(() => {
   jest.clearAllMocks()
   stderr.start()
   ciInfo.isCI = false
+  // Clear ora mocks
+  ora.mockClear() // Clear calls to the ora() constructor itself
+  mockOraSpinnerInstance.fail.mockClear()
+  mockOraSpinnerInstance.succeed.mockClear()
+  mockOraSpinnerInstance.start.mockClear()
+  mockOraSpinnerInstance.stopAndPersist.mockClear()
+  mockOraSpinnerInstance.info.mockClear()
 })
 
 afterEach(() => {
@@ -291,4 +316,23 @@ test('browser config is passed to open', async () => {
 
   const openOptions = open.mock.calls[0][1]
   expect(openOptions.app).toEqual('Firefox')
+})
+
+test('login in CI environment (not bare)', async () => {
+  ciInfo.isCI = true // Simulate CI environment
+  const config = { ...gConfig, bare: false } // Not bare
+
+  await expect(login(config)).rejects.toThrow(new errors.codes.IMSOAUTHCLI_LOGIN_CI_ERROR())
+  expect(ora).toHaveBeenCalledTimes(1) // ora constructor should be called
+  expect(mockOraSpinnerInstance.fail).toHaveBeenCalledWith('CI Environment: Interactive login not supported. Use service token/env vars for authentication.')
+  expect(open).not.toHaveBeenCalled() // Ensure browser open was not attempted
+})
+
+test('login in CI environment (bare)', async () => {
+  ciInfo.isCI = true // Simulate CI environment
+  const config = { ...gConfig, bare: true } // Bare mode
+
+  await expect(login(config)).rejects.toThrow(new errors.codes.IMSOAUTHCLI_LOGIN_CI_ERROR())
+  expect(ora).not.toHaveBeenCalled() // Ensure ora constructor was NOT called in bare mode
+  expect(open).not.toHaveBeenCalled() // Ensure browser open was not attempted
 })
