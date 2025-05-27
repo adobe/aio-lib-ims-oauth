@@ -324,7 +324,7 @@ test('login in CI environment (not bare)', async () => {
 
   await expect(login(config)).rejects.toThrow(new errors.codes.IMSOAUTHCLI_LOGIN_CI_ERROR())
   expect(ora).toHaveBeenCalledTimes(1) // ora constructor should be called
-  expect(mockOraSpinnerInstance.fail).toHaveBeenCalledWith('CI Environment: Interactive login not supported. Use service token/env vars for authentication.')
+  expect(mockOraSpinnerInstance.fail).toHaveBeenCalledWith('CI Environment: Interactive login not supported. Use technical account via env vars for authentication. For guidance, see https://github.com/adobe/aio-apps-action')
   expect(open).not.toHaveBeenCalled() // Ensure browser open was not attempted
 })
 

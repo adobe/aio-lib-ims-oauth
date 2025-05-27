@@ -23,13 +23,16 @@ const LOGIN_SUCCESS = '/login-success'
 /**
  * Gets the access token / auth code for a signed in user.
  *
- * @param {object} options the optional configuration, { bare, env, timeout, client_id, scope, autoOpen }
- * @param {number} [options.bare=false] set to true to not have any progress text
- * @param {number} [options.timeout] the timeout in seconds
- * @param {string} [options.client_id] the client id of the OAuth2 integration
- * @param {string} [options.scope] the scope of the OAuth2 integration
- * @param {string} [options.redirect_uri] the redirect uri of the OAuth2 integration
- * @returns {Promise} resolves to an access token/auth code
+ * @param {object} options the optional configuration
+ * @param {boolean} [options.bare=false] If true, suppresses spinners and verbose messages, for script-friendly or headless output. If false (default), provides interactive feedback.
+ * @param {string} [options.env] The IMS environment to use.
+ * @param {number} [options.timeout] The timeout in seconds for the login process.
+ * @param {string} [options.client_id] The client id of the OAuth2 integration.
+ * @param {string} [options.scope] The scope of the OAuth2 integration.
+ * @param {boolean} [options.forceLogin] If true, forces the user to log in even if they have an active session.
+ * @param {boolean} [options.open=true] If true, attempts to automatically open the login URL in the default browser.
+ * @param {string} [options.browser] Specify the browser application to use for opening the login URL.
+ * @returns {Promise<object|string>} Resolves to an access token object or an auth code string.
  */
 async function login (options) {
   aioLogger.debug(`login options: ${JSON.stringify(options)}`)
@@ -60,18 +63,21 @@ async function login (options) {
     if (ciInfo.isCI && !bare) {
       // CI path and !bare (so show spinner messages)
       spinner = ora()
-      spinner.fail('CI Environment: Interactive login not supported. Use service token/env vars for authentication.')
+      spinner.fail('CI Environment: Interactive login not supported. Use technical account via env vars for authentication. For guidance, see https://github.com/adobe/aio-apps-action')
       return reject(new errors.IMSOAUTHCLI_LOGIN_CI_ERROR())
     } else if (ciInfo.isCI) {
       // CI Environment Path, and bare (so no spinner messages)
       return reject(new errors.IMSOAUTHCLI_LOGIN_CI_ERROR())
     } else {
-      // original logic for Non-CI path
+      // Non-CI Environment Path
       if (!bare) {
-        // stderr so it is always visible
+        // Non-CI, !bare: Interactive mode with spinners
         spinner = ora()
         spinner.stopAndPersist({ text: 'Visit this url to log in:\n' + uri })
         spinner.start('Waiting for browser login')
+      } else {
+        // Non-CI, bare: No spinners. Log URI for manual use
+        console.log(`Login URI (for manual use if browser does not open automatically): ${uri}`)
       }
 
       if (autoOpen) {
