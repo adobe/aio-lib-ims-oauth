@@ -16,11 +16,13 @@ const open = require('open')
 const login = require('../src/login')
 const url = require('url')
 const { stderr } = require('stdout-stderr')
+const ciInfo = require('ci-info')
 
 // //////////////////////////////////////////
 
 jest.mock('../src/helpers')
 jest.mock('open', () => jest.fn())
+jest.mock('ci-info')
 
 const gConfig = {
   client_id: 'my-client-id',
@@ -85,6 +87,7 @@ afterAll(() => {
 beforeEach(() => {
   jest.clearAllMocks()
   stderr.start()
+  ciInfo.isCI = false
 })
 
 afterEach(() => {
