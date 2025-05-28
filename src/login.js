@@ -30,7 +30,7 @@ const LOGIN_SUCCESS = '/login-success'
  * @param {string} [options.client_id] The client id of the OAuth2 integration.
  * @param {string} [options.scope] The scope of the OAuth2 integration.
  * @param {boolean} [options.forceLogin] If true, forces the user to log in even if they have an active session.
- * @param {boolean} [options.open=true] If true, attempts to automatically open the login URL in the default browser.
+ * @param {boolean} [options.autoOpen=true] If true, attempts to automatically open the login URL in the default browser.
  * @param {string} [options.browser] Specify the browser application to use for opening the login URL.
  * @returns {Promise<object|string>} Resolves to an access token object or an auth code string.
  */
@@ -44,7 +44,7 @@ async function login (options) {
     client_id, // eslint-disable-line camelcase
     scope,
     forceLogin,
-    open: autoOpen = true,
+    autoOpen = true,
     browser: app
   } = options
 
@@ -77,7 +77,7 @@ async function login (options) {
         spinner.start('Waiting for browser login')
       } else {
         // Non-CI, bare: No spinners. Log URI for manual use
-        console.log(`Login URI (for manual use if browser does not open automatically): ${uri}`)
+        console.error(`Login URI (for manual use if browser does not open automatically): ${uri}`)
       }
 
       if (autoOpen) {

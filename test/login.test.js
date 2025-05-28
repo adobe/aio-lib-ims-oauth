@@ -212,10 +212,22 @@ test('login (GET)', async () => {
   await expect(login({ ...gConfig, bare: true })).resolves.toEqual(myAccessToken)
 })
 
-test('open:false', async () => {
+test('open:false should not call open function', async () => {
   const myAccessToken = { access_token: { token: 'my-access-token', expiry: 123 } }
-  await expect(login({ ...gConfig, open: false })).resolves.toEqual(myAccessToken)
-  expect(open.mock.calls.length).toEqual(0)
+  // Mock server and handler for this test to allow promise resolution
+  const request = { method: 'GET' }
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer(request, createMockResponse()))
+    })
+  })
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => {
+    done() // cleanup the call
+    return myAccessToken // Resolve with token
+  })
+
+  await expect(login({ ...gConfig, autoOpen: false })).resolves.toEqual(myAccessToken)
+  expect(open).not.toHaveBeenCalled() // Check that open was not called
 })
 
 test('error', async () => {
