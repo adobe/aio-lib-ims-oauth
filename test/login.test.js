@@ -16,11 +16,31 @@ const open = require('open')
 const login = require('../src/login')
 const url = require('url')
 const { stderr } = require('stdout-stderr')
+const ciInfo = require('ci-info')
+const errors = require('../src/errors')
 
 // //////////////////////////////////////////
 
 jest.mock('../src/helpers')
 jest.mock('open', () => jest.fn())
+jest.mock('ci-info')
+
+const mockOraSpinnerInstance = {
+  fail: jest.fn(),
+  succeed: jest.fn(),
+  start: jest.fn(() => mockOraSpinnerInstance),
+  stopAndPersist: jest.fn(options => {
+    if (options && options.text) {
+      process.stderr.write(options.text + '\n')
+    }
+    return mockOraSpinnerInstance
+  }),
+  info: jest.fn(() => mockOraSpinnerInstance)
+}
+
+jest.mock('ora', () => jest.fn().mockImplementation(() => mockOraSpinnerInstance))
+
+const ora = require('ora')
 
 const gConfig = {
   client_id: 'my-client-id',
@@ -85,6 +105,7 @@ afterAll(() => {
 beforeEach(() => {
   jest.clearAllMocks()
   stderr.start()
+  ciInfo.isCI = false
 })
 
 afterEach(() => {
@@ -191,10 +212,22 @@ test('login (GET)', async () => {
   await expect(login({ ...gConfig, bare: true })).resolves.toEqual(myAccessToken)
 })
 
-test('open:false', async () => {
+test('open:false should not call open function', async () => {
   const myAccessToken = { access_token: { token: 'my-access-token', expiry: 123 } }
-  await expect(login({ ...gConfig, open: false })).resolves.toEqual(myAccessToken)
-  expect(open.mock.calls.length).toEqual(0)
+  // Mock server and handler for this test to allow promise resolution
+  const request = { method: 'GET' }
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer(request, createMockResponse()))
+    })
+  })
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => {
+    done() // cleanup the call
+    return myAccessToken // Resolve with token
+  })
+
+  await expect(login({ ...gConfig, autoOpen: false })).resolves.toEqual(myAccessToken)
+  expect(open).not.toHaveBeenCalled() // Check that open was not called
 })
 
 test('error', async () => {
@@ -288,4 +321,23 @@ test('browser config is passed to open', async () => {
 
   const openOptions = open.mock.calls[0][1]
   expect(openOptions.app).toEqual('Firefox')
+})
+
+test('login in CI environment (not bare)', async () => {
+  ciInfo.isCI = true // Simulate CI environment
+  const config = { ...gConfig, bare: false } // Not bare
+
+  await expect(login(config)).rejects.toThrow(new errors.codes.IMSOAUTHCLI_LOGIN_CI_ERROR())
+  expect(ora).toHaveBeenCalledTimes(1) // ora constructor should be called
+  expect(mockOraSpinnerInstance.fail).toHaveBeenCalledWith('CI Environment: Interactive login not supported. Use technical account via env vars for authentication. For guidance, see https://github.com/adobe/aio-apps-action')
+  expect(open).not.toHaveBeenCalled() // Ensure browser open was not attempted
+})
+
+test('login in CI environment (bare)', async () => {
+  ciInfo.isCI = true // Simulate CI environment
+  const config = { ...gConfig, bare: true } // Bare mode
+
+  await expect(login(config)).rejects.toThrow(new errors.codes.IMSOAUTHCLI_LOGIN_CI_ERROR())
+  expect(ora).not.toHaveBeenCalled() // Ensure ora constructor was NOT called in bare mode
+  expect(open).not.toHaveBeenCalled() // Ensure browser open was not attempted
 })
