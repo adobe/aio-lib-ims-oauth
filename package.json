@@ -9,7 +9,7 @@
     "@adobe/aio-lib-core-logging": "^3",
     "@adobe/aio-lib-env": "^3",
     "ci-info": "^4.2.0",
-    "open": "^8.4.2",
+    "open": "^10.2.0",
     "ora": "^5.4.1"
   },
   "peerDependencies": {

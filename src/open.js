@@ -10,9 +10,9 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const open = require('open')
-const { patchWindowsEnv } = require('./helpers')
-
-patchWindowsEnv()
+async function open(url, options) {
+    const open = (await import('open')).default
+    return open(url, options)
+}
 
 module.exports = open

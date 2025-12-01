@@ -74,14 +74,18 @@ async function login (options) {
         // Non-CI, !bare: Interactive mode with spinners
         spinner = ora()
         spinner.stopAndPersist({ text: 'Visit this url to log in:\n' + uri })
-        spinner.start('Waiting for browser login')
       } else {
         // Non-CI, bare: No spinners. Log URI for manual use
         console.error(`Login URI (for manual use if browser does not open automatically): ${uri}`)
       }
 
       if (autoOpen) {
-        open(uri, { app })
+        try {
+          open(uri, { app })
+        } catch (error) {
+          spinner.warn(`WARNING: The browser couldn't open. Please enter the URL above in your browser.`)
+        }
+        spinner.start('Waiting for browser login')
       }
 
       const timerId = setTimeout(() => {

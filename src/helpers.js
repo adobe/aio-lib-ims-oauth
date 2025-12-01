@@ -281,29 +281,6 @@ function handleUnsupportedHttpMethod (_request, response, done, env = getCliEnv(
 }
 
 /**
- * On Windows, node should read all system environment variables case insensitively:
- *   https://nodejs.org/api/process.html#processenv
- *
- * However, this line in the `open` module is returning `undefined` for `process.env.SYSTEMROOT`:
- *   https://github.com/sindresorhus/open/blob/cbc008bab21f657475b54e33a823b2941737da6f/index.js#L147
- *
- * `process.env.SystemRoot` seems to be always available however, so based on the docs for `process`,
- *  this could be a bug in `node.js`:
- *    https://github.com/sanity-io/sanity/pull/4221
- *
- * We work around this for `open` by setting `SYSTEMROOT` to be equal to `SystemRoot`, if the env var is available.
- */
-function patchWindowsEnv () {
-  if (process.platform !== 'win32') {
-    return
-  }
-
-  if (process.env.SystemRoot) {
-    process.env.SYSTEMROOT = process.env.SystemRoot
-  }
-}
-
-/**
  * Convert a string value to Json. Returns the original string if it fails.
  *
  * @private
@@ -335,7 +312,6 @@ function parseConfig (config) {
 module.exports = {
   parseJson,
   parseConfig,
-  patchWindowsEnv,
   handleGET,
   handlePOST,
   handleOPTIONS,
