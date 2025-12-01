@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:login', { provider: 'debug' })
 const ora = require('ora')
-const open = require('./open')
+const openModule = require('./open')
 const ciInfo = require('ci-info')
 const { randomId, authSiteUrl, getImsCliOAuthUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 const { codes: errors } = require('./errors')
@@ -30,7 +30,7 @@ const LOGIN_SUCCESS = '/login-success'
  * @param {string} [options.client_id] The client id of the OAuth2 integration.
  * @param {string} [options.scope] The scope of the OAuth2 integration.
  * @param {boolean} [options.forceLogin] If true, forces the user to log in even if they have an active session.
- * @param {boolean} [options.autoOpen=true] If true, attempts to automatically open the login URL in the default browser.
+ * @param {boolean} [options.open=true] If true, attempts to automatically open the login URL in the default browser.
  * @param {string} [options.browser] Specify the browser application to use for opening the login URL.
  * @returns {Promise<object|string>} Resolves to an access token object or an auth code string.
  */
@@ -44,7 +44,7 @@ async function login (options) {
     client_id, // eslint-disable-line camelcase
     scope,
     forceLogin,
-    autoOpen = true,
+    open: autoOpen = true, // LEGACY: use `open`for backwards compatibility
     browser: app
   } = options
 
@@ -84,7 +84,7 @@ async function login (options) {
 
       if (autoOpen) {
         try {
-          open(uri, { app })
+          openModule(uri, { app })
         } catch (error) {
           const message = 'WARNING: The browser couldn\'t open. Please enter the URL above in your browser.'
           if (!bare) {

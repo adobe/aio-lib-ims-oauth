@@ -227,7 +227,7 @@ test('open:false should not call open function', async () => {
     return myAccessToken // Resolve with token
   })
 
-  await expect(login({ ...gConfig, autoOpen: false })).resolves.toEqual(myAccessToken)
+  await expect(login({ ...gConfig, open: false })).resolves.toEqual(myAccessToken)
   expect(open).not.toHaveBeenCalled() // Check that open was not called
 })
 
