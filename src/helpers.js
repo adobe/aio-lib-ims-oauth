@@ -17,7 +17,6 @@ const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oau
 const querystring = require('node:querystring')
 const { getCliEnv } = require('@adobe/aio-lib-env')
 const { codes: errors } = require('./errors')
-const process = require('node:process')
 
 const PROTOCOL_VERSION = 2
 

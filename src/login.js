@@ -59,6 +59,7 @@ async function login (options) {
 
   return new Promise((resolve, reject) => {
     let spinner
+    const waitMessage = 'Waiting for browser login...'
 
     if (ciInfo.isCI && !bare) {
       // CI path and !bare (so show spinner messages)
@@ -73,33 +74,41 @@ async function login (options) {
       if (!bare) {
         // Non-CI, !bare: Interactive mode with spinners
         spinner = ora()
-        spinner.stopAndPersist({ text: 'Visit this url to log in:\n' + uri })
+        spinner.stopAndPersist({
+          text: `Visit this url to log in:\n${uri}`
+        })
       } else {
         // Non-CI, bare: No spinners. Log URI for manual use
-        console.error(`Login URI (for manual use if browser does not open automatically): ${uri}`)
+        console.error(`Login URI (for manual use if browser does not open automatically):\n${uri}`)
       }
 
       if (autoOpen) {
         try {
           open(uri, { app })
         } catch (error) {
-          spinner.warn(`WARNING: The browser couldn't open. Please enter the URL above in your browser.`)
+          const message = 'WARNING: The browser couldn\'t open. Please enter the URL above in your browser.'
+          if (!bare) {
+            spinner?.warn(message)
+          } else {
+            console.warn(message)
+          }
         }
-        spinner.start('Waiting for browser login')
+      }
+
+      if (!bare) {
+        spinner?.start(waitMessage)
+      } else {
+        console.log(waitMessage)
       }
 
       const timerId = setTimeout(() => {
-        if (!bare && spinner) { // Ensure spinner exists
-          spinner.fail()
-        }
+        spinner?.fail()
         reject(new errors.TIMEOUT({ messageValues: timeout }))
       }, timeout * 1000)
 
       const cleanup = () => {
         clearTimeout(timerId)
-        if (!bare && spinner) { // Ensure spinner exists
-          spinner.succeed('Login successful')
-        }
+        spinner?.succeed('Login successful')
         server.close()
       }
 
@@ -123,9 +132,7 @@ async function login (options) {
               return handleUnsupportedHttpMethod(request, response, cleanup, env)
           }
         } catch (error) {
-          if (!bare && spinner) { // Ensure spinner exists
-            spinner.fail()
-          }
+          spinner?.fail()
           cleanup()
           reject(error)
         }
