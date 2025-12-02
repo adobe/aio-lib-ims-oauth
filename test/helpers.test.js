@@ -25,8 +25,7 @@ const {
   stringToJson,
   handleUnsupportedHttpMethod,
   handleOPTIONS,
-  codeTransform,
-  patchWindowsEnv
+  codeTransform
 } = require('../src/helpers')
 
 const http = require('node:http')
@@ -34,14 +33,9 @@ const querystring = require('node:querystring')
 const url = require('node:url')
 const libEnv = require('@adobe/aio-lib-env')
 const { STAGE_ENV, PROD_ENV } = jest.requireActual('@adobe/aio-lib-env')
-const process = require('node:process')
 
 jest.mock('@adobe/aio-lib-env')
 jest.mock('node:http')
-jest.mock('node:process', () => ({
-  platform: 'linux',
-  env: {}
-}))
 
 const createMockResponse = () => ({
   setHeader: jest.fn(),
@@ -344,49 +338,4 @@ test('cors', () => {
   cors(response) // default
   origin = new url.URL(IMS_CLI_OAUTH_URL[env]).origin
   expect(headers[allowOriginHeader]).toEqual(origin)
-})
-
-describe('patchWindowsEnv', () => {
-  const env = process.env
-  const platform = process.platform
-
-  // restore
-  afterEach(() => {
-    process.env = env
-    process.platform = platform
-  })
-
-  test('not win32, SystemRoot not set (no change)', () => {
-    process.platform = 'linux'
-
-    process.env.SystemRoot = undefined
-    patchWindowsEnv()
-    expect(process.env.SYSTEMROOT).toEqual(undefined)
-  })
-
-  test('not win32, SystemRoot set (no change)', () => {
-    process.platform = 'linux'
-    const envValue = 'something'
-
-    process.env.SystemRoot = envValue
-    patchWindowsEnv()
-    expect(process.env.SYSTEMROOT).toEqual(undefined)
-  })
-
-  test('win32, SystemRoot not set (no change)', () => {
-    process.platform = 'win32'
-
-    process.env.SystemRoot = undefined
-    patchWindowsEnv()
-    expect(process.env.SYSTEMROOT).toEqual(undefined)
-  })
-
-  test('win32, SystemRoot set (change)', () => {
-    process.platform = 'win32'
-    const envValue = 'C:\\Windows'
-
-    process.env.SystemRoot = envValue
-    patchWindowsEnv()
-    expect(process.env.SYSTEMROOT).toEqual(envValue)
-  })
 })

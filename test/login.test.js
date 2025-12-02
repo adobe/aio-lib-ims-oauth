@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 const helpers = require('../src/helpers')
 const { authSiteUrl, getImsCliOAuthUrl } = jest.requireActual('../src/helpers')
-const open = require('open')
+const open = require('../src/open')
 const login = require('../src/login')
 const url = require('url')
 const { stderr } = require('stdout-stderr')
@@ -22,7 +22,7 @@ const errors = require('../src/errors')
 // //////////////////////////////////////////
 
 jest.mock('../src/helpers')
-jest.mock('open', () => jest.fn())
+jest.mock('../src/open', () => jest.fn())
 jest.mock('ci-info')
 
 const mockOraSpinnerInstance = {
@@ -35,7 +35,8 @@ const mockOraSpinnerInstance = {
     }
     return mockOraSpinnerInstance
   }),
-  info: jest.fn(() => mockOraSpinnerInstance)
+  info: jest.fn(() => mockOraSpinnerInstance),
+  warn: jest.fn(() => mockOraSpinnerInstance)
 }
 
 jest.mock('ora', () => jest.fn().mockImplementation(() => mockOraSpinnerInstance))
@@ -226,7 +227,7 @@ test('open:false should not call open function', async () => {
     return myAccessToken // Resolve with token
   })
 
-  await expect(login({ ...gConfig, autoOpen: false })).resolves.toEqual(myAccessToken)
+  await expect(login({ ...gConfig, open: false })).resolves.toEqual(myAccessToken)
   expect(open).not.toHaveBeenCalled() // Check that open was not called
 })
 
@@ -321,6 +322,48 @@ test('browser config is passed to open', async () => {
 
   const openOptions = open.mock.calls[0][1]
   expect(openOptions.app).toEqual('Firefox')
+})
+
+test('open throws error and spinner warns user', async () => {
+  const request = { method: 'GET' }
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer(request, createMockResponse()))
+    })
+  })
+  // to handle timer cleanup duties
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
+
+  // Make open throw an error
+  open.mockImplementation(() => {
+    throw new Error('Failed to open browser')
+  })
+
+  await login(gConfig)
+
+  // Verify spinner.warn was called with the appropriate message
+  expect(mockOraSpinnerInstance.warn).toHaveBeenCalledWith('WARNING: The browser couldn\'t open. Please enter the URL above in your browser.')
+})
+
+test('open throws error in bare mode (no spinner warning)', async () => {
+  const request = { method: 'GET' }
+  helpers.createServer.mockImplementation(() => {
+    return new Promise(resolve => {
+      resolve(createMockServer(request, createMockResponse()))
+    })
+  })
+  // to handle timer cleanup duties
+  helpers.handleGET.mockImplementation((_req, _res, _id, done) => done())
+
+  // Make open throw an error
+  open.mockImplementation(() => {
+    throw new Error('Failed to open browser')
+  })
+
+  await login({ ...gConfig, bare: true })
+
+  // Verify spinner.warn was NOT called (since bare mode has no spinner)
+  expect(mockOraSpinnerInstance.warn).not.toHaveBeenCalled()
 })
 
 test('login in CI environment (not bare)', async () => {

@@ -10,9 +10,17 @@ OF ANY KIND, either express or implied. See the License for the specific languag
 governing permissions and limitations under the License.
 */
 
-const open = require('open')
-const { patchWindowsEnv } = require('./helpers')
-
-patchWindowsEnv()
+/**
+ * Opens a URL in the user's default browser or specified application.
+ *
+ * @param {string} url The URL to open.
+ * @param {object} [options] Optional configuration for opening the URL.
+ * @returns {Promise} Resolves when the URL has been opened.
+ */
+async function open (url, options) {
+  // eslint-disable-next-line node/no-unsupported-features/es-syntax
+  const open = (await import('open')).default
+  return open(url, options)
+}
 
 module.exports = open

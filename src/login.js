@@ -12,7 +12,7 @@ governing permissions and limitations under the License.
 
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:login', { provider: 'debug' })
 const ora = require('ora')
-const open = require('./open')
+const openModule = require('./open')
 const ciInfo = require('ci-info')
 const { randomId, authSiteUrl, getImsCliOAuthUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
 const { codes: errors } = require('./errors')
@@ -30,7 +30,7 @@ const LOGIN_SUCCESS = '/login-success'
  * @param {string} [options.client_id] The client id of the OAuth2 integration.
  * @param {string} [options.scope] The scope of the OAuth2 integration.
  * @param {boolean} [options.forceLogin] If true, forces the user to log in even if they have an active session.
- * @param {boolean} [options.autoOpen=true] If true, attempts to automatically open the login URL in the default browser.
+ * @param {boolean} [options.open=true] If true, attempts to automatically open the login URL in the default browser.
  * @param {string} [options.browser] Specify the browser application to use for opening the login URL.
  * @returns {Promise<object|string>} Resolves to an access token object or an auth code string.
  */
@@ -44,7 +44,7 @@ async function login (options) {
     client_id, // eslint-disable-line camelcase
     scope,
     forceLogin,
-    autoOpen = true,
+    open: autoOpen = true, // LEGACY: use `open`for backwards compatibility
     browser: app
   } = options
 
@@ -59,6 +59,7 @@ async function login (options) {
 
   return new Promise((resolve, reject) => {
     let spinner
+    const waitMessage = 'Waiting for browser login...'
 
     if (ciInfo.isCI && !bare) {
       // CI path and !bare (so show spinner messages)
@@ -73,29 +74,41 @@ async function login (options) {
       if (!bare) {
         // Non-CI, !bare: Interactive mode with spinners
         spinner = ora()
-        spinner.stopAndPersist({ text: 'Visit this url to log in:\n' + uri })
-        spinner.start('Waiting for browser login')
+        spinner.stopAndPersist({
+          text: `Visit this url to log in:\n${uri}`
+        })
       } else {
         // Non-CI, bare: No spinners. Log URI for manual use
-        console.error(`Login URI (for manual use if browser does not open automatically): ${uri}`)
+        console.error(`Login URI (for manual use if browser does not open automatically):\n${uri}`)
       }
 
       if (autoOpen) {
-        open(uri, { app })
+        try {
+          openModule(uri, { app })
+        } catch (error) {
+          const message = 'WARNING: The browser couldn\'t open. Please enter the URL above in your browser.'
+          if (!bare) {
+            spinner?.warn(message)
+          } else {
+            console.warn(message)
+          }
+        }
+      }
+
+      if (!bare) {
+        spinner?.start(waitMessage)
+      } else {
+        console.log(waitMessage)
       }
 
       const timerId = setTimeout(() => {
-        if (!bare && spinner) { // Ensure spinner exists
-          spinner.fail()
-        }
+        spinner?.fail()
         reject(new errors.TIMEOUT({ messageValues: timeout }))
       }, timeout * 1000)
 
       const cleanup = () => {
         clearTimeout(timerId)
-        if (!bare && spinner) { // Ensure spinner exists
-          spinner.succeed('Login successful')
-        }
+        spinner?.succeed('Login successful')
         server.close()
       }
 
@@ -119,9 +132,7 @@ async function login (options) {
               return handleUnsupportedHttpMethod(request, response, cleanup, env)
           }
         } catch (error) {
-          if (!bare && spinner) { // Ensure spinner exists
-            spinner.fail()
-          }
+          spinner?.fail()
           cleanup()
           reject(error)
         }
