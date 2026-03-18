@@ -40,7 +40,8 @@ async function createServer () {
   return new Promise(resolve => {
     const server = http.createServer()
 
-    server.listen(0, '127.0.0.1')
+    const port = Number(process.env.AIO_IMS_LOCAL_LOGIN_PORT) || 0
+    server.listen(port, '127.0.0.1')
     server.on('listening', () => {
       resolve(server)
     })
