@@ -133,6 +133,49 @@ test('createServer', async () => {
   })
 
   await expect(createServer()).resolves.toEqual(server)
+  expect(server.listen).toHaveBeenCalledWith(0, '127.0.0.1')
+})
+
+test('createServer - AIO_IMS_LOCAL_LOGIN_PORT set to valid number', async () => {
+  const server = {
+    listen: jest.fn(),
+    close: jest.fn(),
+    on: jest.fn((event, callback) => {
+      if (event === 'listening') {
+        setTimeout(callback, 100)
+      }
+    })
+  }
+
+  http.createServer.mockImplementation((_) => {
+    return server
+  })
+
+  process.env.AIO_IMS_LOCAL_LOGIN_PORT = '8080'
+  await expect(createServer()).resolves.toEqual(server)
+  expect(server.listen).toHaveBeenCalledWith(8080, '127.0.0.1')
+  delete process.env.AIO_IMS_LOCAL_LOGIN_PORT
+})
+
+test('createServer - AIO_IMS_LOCAL_LOGIN_PORT set to invalid value', async () => {
+  const server = {
+    listen: jest.fn(),
+    close: jest.fn(),
+    on: jest.fn((event, callback) => {
+      if (event === 'listening') {
+        setTimeout(callback, 100)
+      }
+    })
+  }
+
+  http.createServer.mockImplementation((_) => {
+    return server
+  })
+
+  process.env.AIO_IMS_LOCAL_LOGIN_PORT = 'notanumber'
+  await expect(createServer()).resolves.toEqual(server)
+  expect(server.listen).toHaveBeenCalledWith(0, '127.0.0.1')
+  delete process.env.AIO_IMS_LOCAL_LOGIN_PORT
 })
 
 test('stringToJson', () => {

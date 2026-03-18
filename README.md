@@ -61,6 +61,19 @@ For example as shown in the following screenshot editing the credential:
 
 ![Edit Credential](docs/images/developer-console-edit-credential.png "Developer Console: edit credential")
 
+# Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AIO_IMS_LOCAL_LOGIN_PORT` | The port number for the local login server. Useful for Docker environments where a specific port needs to be forwarded. Must be a valid number; falls back to `0` (OS-assigned) if not set or invalid. | `0` |
+
+For example, to run `aio login` inside a Docker container with port forwarding:
+
+```bash
+export LOCAL_LOGIN_PORT=8080
+docker run --rm -it -p ${LOCAL_LOGIN_PORT}:${LOCAL_LOGIN_PORT} -e AIO_IMS_LOCAL_LOGIN_PORT=${LOCAL_LOGIN_PORT} node:24-slim sh -c "npm install -g @adobe/aio-cli && bash"
+```
+
 # Contributing
 Contributions are welcomed! Read the [Contributing Guide](CONTRIBUTING.md) for more information.
 
