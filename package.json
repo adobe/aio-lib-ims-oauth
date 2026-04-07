@@ -29,7 +29,7 @@
     "jest": "^29",
     "jest-junit": "^16.0.0",
     "stdout-stderr": "^0.1.9",
-    "typescript": "^5.2.2"
+    "typescript": "^6.0.2"
   },
   "engineStrict": true,
   "engines": {
