@@ -10,7 +10,7 @@
     "@adobe/aio-lib-env": "^3",
     "ci-info": "^4.2.0",
     "open": "^10.2.0",
-    "ora": "^5.4.1"
+    "ora": "^9.3.0"
   },
   "peerDependencies": {
     "@adobe/aio-lib-ims": "^7 || ^8"
