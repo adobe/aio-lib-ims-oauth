@@ -127,6 +127,9 @@ test('redactSecrets', () => {
     client_id: 'my-client-id',
     client_secret: 'my-client-secret',
     client_secrets: ['my-client-secret-1', 'my-client-secret-2'],
+    password: 'my-password',
+    access_token: 'my-token',
+    api_key: 'my-api-key',
     scope: 'my-scope'
   }
   const original = { ...config }
@@ -137,6 +140,9 @@ test('redactSecrets', () => {
   expect(redacted.scope).toEqual('my-scope')
   expect(redacted.client_secret).toEqual('<hidden>')
   expect(redacted.client_secrets).toEqual('<hidden>')
+  expect(redacted.password).toEqual('<hidden>')
+  expect(redacted.access_token).toEqual('<hidden>')
+  expect(redacted.api_key).toEqual('<hidden>')
   expect(config).toEqual(original) // original config object is not mutated
 
   expect(redactSecrets({ client_id: 'my-client-id' })).toEqual({ client_id: 'my-client-id' })
