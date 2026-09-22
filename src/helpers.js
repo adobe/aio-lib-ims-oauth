@@ -20,6 +20,8 @@ const { codes: errors } = require('./errors')
 
 const PROTOCOL_VERSION = 2
 
+const SENSITIVE_CONFIG_KEY_PATTERN = /secret|password|token|credential|apikey|api_key/i
+
 const IMS_CLI_OAUTH_URL = {
   prod: 'https://aio-login.adobeioruntime.net/api/v1/web/default/applogin',
   stage: 'https://aio-login-stage.adobeioruntime.net/api/v1/web/default/applogin'
@@ -309,9 +311,31 @@ function parseConfig (config) {
     }, {})
 }
 
+/**
+ * Returns a shallow copy of config with credential-shaped fields (matched by key name,
+ * e.g. client_secret, client_secrets, password, token) masked, safe to pass to a logger.
+ * The original config object is left untouched.
+ *
+ * @param {object} config the configuration data
+ * @returns {object} a copy of config with sensitive fields masked
+ */
+function redactSecrets (config) {
+  if (!config) {
+    return config
+  }
+  const redacted = { ...config }
+  Object.keys(redacted).forEach(key => {
+    if (SENSITIVE_CONFIG_KEY_PATTERN.test(key)) {
+      redacted[key] = '<hidden>'
+    }
+  })
+  return redacted
+}
+
 module.exports = {
   parseJson,
   parseConfig,
+  redactSecrets,
   handleGET,
   handlePOST,
   handleOPTIONS,

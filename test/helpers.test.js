@@ -13,6 +13,7 @@ governing permissions and limitations under the License.
 const {
   parseJson,
   parseConfig,
+  redactSecrets,
   IMS_CLI_OAUTH_URL,
   IMS_CLI_OAUTH_LOGOUT_URL,
   randomId,
@@ -74,6 +75,7 @@ beforeEach(() => {
 test('exports', () => {
   expect(typeof parseJson).toEqual('function')
   expect(typeof parseConfig).toEqual('function')
+  expect(typeof redactSecrets).toEqual('function')
   expect(typeof IMS_CLI_OAUTH_URL).toEqual('object')
   expect(typeof createServer).toEqual('function')
   expect(typeof randomId).toEqual('function')
@@ -115,6 +117,35 @@ test('parseConfig', () => {
   expect(parsedConfig.a).toEqual(myString) // string, returns string
   expect(parsedConfig.b).toEqual(myArray) // string contains array, returns array
   expect(parsedConfig.c).toEqual(myObject) // string contains object, returns object
+})
+
+test('redactSecrets', () => {
+  expect(redactSecrets(undefined)).toEqual(undefined)
+  expect(redactSecrets(null)).toEqual(null)
+
+  const config = {
+    client_id: 'my-client-id',
+    client_secret: 'my-client-secret',
+    client_secrets: ['my-client-secret-1', 'my-client-secret-2'],
+    password: 'my-password',
+    access_token: 'my-token',
+    api_key: 'my-api-key',
+    scope: 'my-scope'
+  }
+  const original = { ...config }
+
+  const redacted = redactSecrets(config)
+
+  expect(redacted.client_id).toEqual('my-client-id')
+  expect(redacted.scope).toEqual('my-scope')
+  expect(redacted.client_secret).toEqual('<hidden>')
+  expect(redacted.client_secrets).toEqual('<hidden>')
+  expect(redacted.password).toEqual('<hidden>')
+  expect(redacted.access_token).toEqual('<hidden>')
+  expect(redacted.api_key).toEqual('<hidden>')
+  expect(config).toEqual(original) // original config object is not mutated
+
+  expect(redactSecrets({ client_id: 'my-client-id' })).toEqual({ client_id: 'my-client-id' })
 })
 
 test('createServer', async () => {

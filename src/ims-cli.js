@@ -12,6 +12,7 @@ governing permissions and limitations under the License.
 const login = require('./login')
 const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oauth:ims-cli', { provider: 'debug' })
 const { codes: errors } = require('./errors')
+const { redactSecrets } = require('./helpers')
 
 const CLI_BARE_OUTPUT = 'cli.bare-output'
 
@@ -25,7 +26,7 @@ const isEmpty = (value) => (value === undefined || value === null)
  * @returns {Array} the missing keys, if any
  */
 function configMissingKeys (configData) {
-  aioLogger.debug(`configMissingKeys configData: ${JSON.stringify(configData)}`)
+  aioLogger.debug(`configMissingKeys configData: ${JSON.stringify(redactSecrets(configData))}`)
 
   if (!configData) {
     return false
@@ -52,7 +53,7 @@ const canSupportSync = (configData) => configMissingKeys(configData).length === 
  * @returns {Promise} resolves to true if the plugin can support the config
  */
 async function canSupport (configData) {
-  aioLogger.debug(`canSupport configData: ${JSON.stringify(configData)}`)
+  aioLogger.debug(`canSupport configData: ${JSON.stringify(redactSecrets(configData))}`)
 
   const missingKeys = configMissingKeys(configData)
   if (missingKeys.length === 0) {
@@ -70,7 +71,7 @@ async function canSupport (configData) {
  * @returns {Promise} resolves with the token data
  */
 async function imsLogin (ims, config) {
-  aioLogger.debug(`imsLogin config: ${JSON.stringify(config)}`)
+  aioLogger.debug(`imsLogin config: ${JSON.stringify(redactSecrets(config))}`)
   return canSupport(config)
     .then(() => {
       const options = {
