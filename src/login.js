@@ -14,7 +14,7 @@ const aioLogger = require('@adobe/aio-lib-core-logging')('@adobe/aio-lib-ims-oau
 const ora = require('ora')
 const openModule = require('./open')
 const ciInfo = require('ci-info')
-const { randomId, authSiteUrl, getImsCliOAuthUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod } = require('./helpers')
+const { randomId, authSiteUrl, getImsCliOAuthUrl, createServer, handleOPTIONS, handleGET, handlePOST, handleUnsupportedHttpMethod, redactSecrets } = require('./helpers')
 const { codes: errors } = require('./errors')
 
 const AUTH_TIMEOUT_SECONDS = 120
@@ -35,7 +35,7 @@ const LOGIN_SUCCESS = '/login-success'
  * @returns {Promise<object|string>} Resolves to an access token object or an auth code string.
  */
 async function login (options) {
-  aioLogger.debug(`login options: ${JSON.stringify(options)}`)
+  aioLogger.debug(`login options: ${JSON.stringify(redactSecrets(options))}`)
 
   const {
     bare = false,
